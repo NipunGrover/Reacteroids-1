@@ -35,7 +35,7 @@ canvas {
   left: 50%;
   transform: translate(-50%, 0);
   z-index: 1;
-  font-size: 11px;
+  font-size: 13px;
   text-align: center;
   line-height: 1.6;
 }

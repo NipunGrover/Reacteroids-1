@@ -1,4 +1,4 @@
-import { rotatePoint } from './helpers';
+import { rotatePoint } from '../utils/functions';
 
 export default class Bullet {
   constructor(args) {

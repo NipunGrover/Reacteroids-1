@@ -1,6 +1,6 @@
 import Bullet from './Bullet';
 import Particle from './Particle';
-import { rotatePoint, randomNumBetween } from './helpers';
+import { rotatePoint, randomNumBetween } from '../utils/functions';
 
 export default class Ship {
   constructor(args) {

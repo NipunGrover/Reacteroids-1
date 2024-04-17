@@ -1,5 +1,5 @@
 import Particle from './Particle';
-import { asteroidVertices, randomNumBetween } from './helpers';
+import { asteroidVertices, randomNumBetween } from '../utils/functions';
 
 export default class Asteroid {
   constructor(args) {
