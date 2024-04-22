@@ -233,10 +233,10 @@ export class Reacteroids extends Component {
 
     if(!this.state.inGame){
       endgame = (
-        <div className="endgame">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-16 z-1 text-center">
           <p>Game over, man!</p>
           <p>{message}</p>
-          <button
+          <button className="border-4 border-white bg-transparent text-white text-m px-10 py-5 m-5 cursor-pointer hover:bg-white hover:text-black"
             onClick={ this.startGame.bind(this) }>
             try again?
           </button>
@@ -247,9 +247,9 @@ export class Reacteroids extends Component {
     return (
       <div>
         { endgame }
-        <span className="score current-score" >Score: {this.state.currentScore}</span>
-        <span className="score top-score" >Top Score: {this.state.topScore}</span>
-        <span className="controls" >
+        <span className="block absolute top-15 z-1 text-sm left-20" >Score: {this.state.currentScore}</span>
+        <span className="block absolute top-15 z-1 text-sm right-20" >Top Score: {this.state.topScore}</span>
+        <span className="block absolute top-15 left-1/2 -translate-x-1/2 translate-y-0 z-1 text-sm text-center leading-normal" >
           Use [A][S][W][D] or [←][↑][↓][→] to MOVE<br/>
           Use [SPACE] to SHOOT
         </span>
