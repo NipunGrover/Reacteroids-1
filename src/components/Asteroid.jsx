@@ -5,8 +5,8 @@ export default class Asteroid {
   constructor(args) {
     this.position = args.position
     this.velocity = {
-      x: randomNumBetween(-1.5, 1.5),
-      y: randomNumBetween(-1.5, 1.5)
+      x: randomNumBetween(-1.5, 0.1),
+      y: randomNumBetween(-1.5, 0.1 )
     }
     this.rotation = 0;
     this.rotationSpeed = randomNumBetween(-1, 1)
@@ -31,8 +31,8 @@ export default class Asteroid {
           y: this.position.y + randomNumBetween(-this.radius/4, this.radius/4)
         },
         velocity: {
-          x: randomNumBetween(-1.5, 1.5),
-          y: randomNumBetween(-1.5, 1.5)
+          x: randomNumBetween(-1.5, 0.1),
+          y: randomNumBetween(-1.5, 0.1)
         }
       });
       this.create(particle, 'particles');

@@ -102,7 +102,7 @@ export class Reacteroids extends Component {
 
     // Check for colisions
     this.checkCollisionsWith(this.bullets, this.asteroids);
-    this.checkCollisionsWith(this.ship, this.asteroids);
+    this.checkCollisionsWithShip(this.ship, this.asteroids);
 
     // Remove or render
     this.updateObjects(this.particles, 'particles')
@@ -209,6 +209,21 @@ export class Reacteroids extends Component {
     }
   }
 
+  checkCollisionsWithShip(items1, items2) {
+    var a = items1.length - 1;
+    var b;
+    for(a; a > -1; --a){
+      b = items2.length - 1;
+      for(b; b > -1; --b){
+        var item1 = items1[a];
+        var item2 = items2[b];
+        if(this.checkCollision(item1, item2)){
+          item1.destroy();
+        }
+      }
+    }
+  }
+
   checkCollision(obj1, obj2){
     var vx = obj1.position.x - obj2.position.x;
     var vy = obj1.position.y - obj2.position.y;
@@ -233,10 +248,10 @@ export class Reacteroids extends Component {
 
     if(!this.state.inGame){
       endgame = (
-        <div className="endgame">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-16 z-1 text-center">
           <p>Game over, man!</p>
           <p>{message}</p>
-          <button
+          <button className="border-4 border-white bg-transparent text-white text-m px-10 py-5 m-5 cursor-pointer hover:bg-white hover:text-black"
             onClick={ this.startGame.bind(this) }>
             try again?
           </button>
@@ -247,9 +262,9 @@ export class Reacteroids extends Component {
     return (
       <div>
         { endgame }
-        <span className="score current-score" >Score: {this.state.currentScore}</span>
-        <span className="score top-score" >Top Score: {this.state.topScore}</span>
-        <span className="controls" >
+        <span className="block absolute top-15 z-1 text-sm left-20" >Score: {this.state.currentScore}</span>
+        <span className="block absolute top-15 z-1 text-sm right-20" >Top Score: {this.state.topScore}</span>
+        <span className="block absolute top-15 left-1/2 -translate-x-1/2 translate-y-0 z-1 text-sm text-center leading-normal" >
           Use [A][S][W][D] or [←][↑][↓][→] to MOVE<br/>
           Use [SPACE] to SHOOT
         </span>
