@@ -84,12 +84,12 @@ export default class Ship {
     if(state.keys.right){
       this.rotate('RIGHT');
     }
-    if(state.keys.space && Date.now() - this.lastShot > 300){
+    if(state.keys.space && !state.pinkState && Date.now() - this.lastShot > 300){
       const bullet = new Bullet({ship: this});
       this.create(bullet, 'bullets');
       this.lastShot = Date.now();
     }
-    if(state.keys.p && Date.now() - this.lastShot > 300){
+    if(state.keys.space && state.pinkState && Date.now() - this.lastShot > 300){
       const superbullet = new SuperBullet({ship: this});
       this.create(superbullet, 'superbullets');
       this.lastShot = Date.now();

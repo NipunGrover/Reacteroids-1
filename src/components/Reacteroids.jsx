@@ -35,7 +35,8 @@ export class Reacteroids extends Component {
       asteroidCount: 3,
       currentScore: 0,
       topScore: localStorage['topscore'] || 0,
-      inGame: false
+      inGame: false,
+      pinkState: false
     }
     this.ship = [];
     this.asteroids = [];
