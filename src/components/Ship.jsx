@@ -67,7 +67,8 @@ export default class Ship {
       velocity: {
         x: posDelta.x / randomNumBetween(3, 5),
         y: posDelta.y / randomNumBetween(3, 5)
-      }
+      },
+      color: '#ff5706'
     });
     this.create(particle, 'particles');
   }
