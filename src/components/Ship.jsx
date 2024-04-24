@@ -1,6 +1,7 @@
 import Bullet from './Bullet';
 import Particle from './Particle';
 import { rotatePoint, randomNumBetween } from '../utils/functions';
+import SuperBullet from './SuperBullet';
 
 export default class Ship {
   constructor(args) {
@@ -85,6 +86,11 @@ export default class Ship {
     if(state.keys.space && Date.now() - this.lastShot > 300){
       const bullet = new Bullet({ship: this});
       this.create(bullet, 'bullets');
+      this.lastShot = Date.now();
+    }
+    if(state.keys.p && Date.now() - this.lastShot > 300){
+      const superbullet = new SuperBullet({ship: this});
+      this.create(superbullet, 'superbullets');
       this.lastShot = Date.now();
     }
 

@@ -10,7 +10,8 @@ const KEY = {
   A: 65,
   D: 68,
   W: 87,
-  SPACE: 32
+  SPACE: 32,
+  P : 80
 };
 
 export class Reacteroids extends Component {
@@ -29,6 +30,7 @@ export class Reacteroids extends Component {
         up    : 0,
         down  : 0,
         space : 0,
+        p : 0,
       },
       asteroidCount: 3,
       currentScore: 0,
@@ -38,6 +40,7 @@ export class Reacteroids extends Component {
     this.ship = [];
     this.asteroids = [];
     this.bullets = [];
+    this.superbullets = [];
     this.particles = [];
   }
 
@@ -57,6 +60,7 @@ export class Reacteroids extends Component {
     if(e.keyCode === KEY.RIGHT  || e.keyCode === KEY.D) keys.right = value;
     if(e.keyCode === KEY.UP     || e.keyCode === KEY.W) keys.up    = value;
     if(e.keyCode === KEY.SPACE) keys.space = value;
+    if(e.keyCode === KEY.P) keys.p = value;
     this.setState({
       keys : keys
     });
@@ -102,12 +106,14 @@ export class Reacteroids extends Component {
 
     // Check for colisions
     this.checkCollisionsWith(this.bullets, this.asteroids);
+    this.checkCollisionsWithSuper(this.superbullets, this.asteroids);
     this.checkCollisionsWithShip(this.ship, this.asteroids);
 
     // Remove or render
     this.updateObjects(this.particles, 'particles')
     this.updateObjects(this.asteroids, 'asteroids')
     this.updateObjects(this.bullets, 'bullets')
+    this.updateObjects(this.superbullets, 'superbullets')
     this.updateObjects(this.ship, 'ship')
 
     context.restore();
@@ -204,6 +210,22 @@ export class Reacteroids extends Component {
         if(this.checkCollision(item1, item2)){
           item1.destroy();
           item2.destroy();
+        }
+      }
+    }
+  }
+
+  checkCollisionsWithSuper(items1, items2) {
+    var a = items1.length - 1;
+    var b;
+    for(a; a > -1; --a){
+      b = items2.length - 1;
+      for(b; b > -1; --b){
+        var item1 = items1[a];
+        var item2 = items2[b];
+        if(this.checkCollision(item1, item2)){
+          item1.destroy();
+          item2.superdestroy();
         }
       }
     }

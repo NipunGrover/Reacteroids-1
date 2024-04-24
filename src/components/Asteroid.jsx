@@ -33,7 +33,48 @@ export default class Asteroid {
         velocity: {
           x: randomNumBetween(-1.5, 0.1),
           y: randomNumBetween(-1.5, 0.1)
-        }
+        },
+        color: '#FFF'
+      });
+      this.create(particle, 'particles');
+    }
+
+    // Break into smaller asteroids
+    if(this.radius > 10){
+      for (let i = 0; i < 2; i++) {
+        let asteroid = new Asteroid({
+
+          size: this.radius/2,
+          position: {
+            x: randomNumBetween(-10, 20)+this.position.x,
+            y: randomNumBetween(-10, 20)+this.position.y
+          },
+          create: this.create.bind(this),
+          addScore: this.addScore.bind(this)
+        });
+        this.create(asteroid, 'asteroids');
+      }
+    }
+  }
+
+  superdestroy(){
+    this.delete = true;
+    this.addScore(this.score);
+
+    // Explode
+    for (let i = 0; i < this.radius; i++) {
+      const particle = new Particle({
+        lifeSpan: randomNumBetween(60, 100),
+        size: randomNumBetween(3, 5),
+        position: {
+          x: this.position.x + randomNumBetween(-this.radius/4, this.radius/4),
+          y: this.position.y + randomNumBetween(-this.radius/4, this.radius/4)
+        },
+        velocity: {
+          x: randomNumBetween(-1.5, 0.1),
+          y: randomNumBetween(-1.5, 0.1)
+        },
+        color: '#ff0096'
       });
       this.create(particle, 'particles');
     }
