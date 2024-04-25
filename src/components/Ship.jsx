@@ -4,6 +4,8 @@ import { rotatePoint, randomNumBetween } from '../utils/functions';
 import SuperBullet from './SuperBullet';
 
 export default class Ship {
+    
+
   constructor(args) {
     this.position = args.position
     this.velocity = {
@@ -73,6 +75,27 @@ export default class Ship {
     this.create(particle, 'particles');
   }
 
+  // A function to draw a ship
+  draw_ship(state, color){   
+    const context = state.context;
+    context.save();
+    context.translate(this.position.x, this.position.y);
+    context.rotate(this.rotation * Math.PI / 180);
+    context.strokeStyle = color;
+    context.fillStyle = '#000000';
+    context.lineWidth = 2;
+    context.beginPath();
+    context.moveTo(0, -15);
+    context.lineTo(10, 10);
+    context.lineTo(5, 7);
+    context.lineTo(-5, 7);
+    context.lineTo(-10, 10);
+    context.closePath();
+    context.fill();
+    context.stroke();
+    context.restore();
+  }
+
   render(state){
     // Controls
     if(state.keys.up){
@@ -95,6 +118,8 @@ export default class Ship {
       this.lastShot = Date.now();
     }
 
+    this.draw_ship(state, '#ff0096');
+
     // Move
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
@@ -115,23 +140,6 @@ export default class Ship {
     if(this.position.y > state.screen.height) this.position.y = 0;
     else if(this.position.y < 0) this.position.y = state.screen.height;
 
-    // Draw
-    const context = state.context;
-    context.save();
-    context.translate(this.position.x, this.position.y);
-    context.rotate(this.rotation * Math.PI / 180);
-    context.strokeStyle = '#ffffff';
-    context.fillStyle = '#000000';
-    context.lineWidth = 2;
-    context.beginPath();
-    context.moveTo(0, -15);
-    context.lineTo(10, 10);
-    context.lineTo(5, 7);
-    context.lineTo(-5, 7);
-    context.lineTo(-10, 10);
-    context.closePath();
-    context.fill();
-    context.stroke();
-    context.restore();
+    this.draw_ship(state, '#FFF');
   }
 }
