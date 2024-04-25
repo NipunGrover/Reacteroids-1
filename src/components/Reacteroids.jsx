@@ -119,8 +119,23 @@ export class Reacteroids extends Component {
 
     context.restore();
 
+    if(keys.p){
+      if(this.state.pinkState){
+        this.setState({
+          pinkState: false
+        });
+      }
+      else{
+        this.setState({
+          pinkState: true
+        });
+      }
+    }
+
     // Next frame
     requestAnimationFrame(() => {this.update()});
+
+    
   }
 
   addScore(points){
@@ -156,6 +171,7 @@ export class Reacteroids extends Component {
   gameOver(){
     this.setState({
       inGame: false,
+      pinkState: false,
     });
 
     // Replace top score
@@ -259,7 +275,9 @@ export class Reacteroids extends Component {
 
   render() {
     let endgame;
+    let ingame
     let message;
+    let Pinkmessage;
 
     if (this.state.currentScore <= 0) {
       message = '0 points... So sad.';
@@ -267,6 +285,12 @@ export class Reacteroids extends Component {
       message = 'Top score with ' + this.state.currentScore + ' points. Woo!';
     } else {
       message = this.state.currentScore + ' Points though :)'
+    }
+
+    if (this.state.pinkState) {
+      Pinkmessage = 'Pink state on';
+    } else {
+      Pinkmessage = 'Pink state off'
     }
 
     if(!this.state.inGame){
@@ -281,20 +305,30 @@ export class Reacteroids extends Component {
         </div>
       )
     }
+    else{
+      ingame = (
+        <div>
+          <p><b>{Pinkmessage}</b></p>
+        </div>
+      )
+    }
 
     return (
       <div>
         { endgame }
+        
         <span className="block absolute top-15 z-1 text-sm left-20" >Score: {this.state.currentScore}</span>
         <span className="block absolute top-15 z-1 text-sm right-20" >Top Score: {this.state.topScore}</span>
         <span className="block absolute top-15 left-1/2 -translate-x-1/2 translate-y-0 z-1 text-sm text-center leading-normal" >
           Use [A][S][W][D] or [←][↑][↓][→] to MOVE<br/>
-          Use [SPACE] to SHOOT
+          Use [SPACE] to SHOOT<br/>
+          { ingame }
         </span>
         <canvas ref="canvas"
           width={this.state.screen.width * this.state.screen.ratio}
           height={this.state.screen.height * this.state.screen.ratio}
         />
+        
       </div>
     );
   }
