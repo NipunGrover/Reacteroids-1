@@ -31,7 +31,7 @@ export default class Particle {
       const context = state.context;
       context.save();
       context.translate(this.position.x, this.position.y);
-      context.fillStyle = '#ffffff';
+      context.fillStyle = '#ff0fff';
       context.lineWidth = 2;
       context.beginPath();
       context.moveTo(0, -this.radius);

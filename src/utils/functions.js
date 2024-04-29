@@ -4,6 +4,8 @@
  * @param  {Number} rad     Maximal radius of polygon
  * @return {Array}        Array of vertices: {x: Number, y: Number}
  */
+import { COMMON_PIXELS } from '../../multiplayer/src/rooms/schema/MyRoomState';
+
 export function asteroidVertices(count, rad) {
     let p = [];
     for (let i = 0; i < count; i++) {
@@ -46,3 +48,12 @@ export function asteroidVertices(count, rad) {
     return random;
   };
   
+  // we need to translate coordinates from the COMMON_PIXELS * COMMON_PIXELS game board
+  export function getCoordinates(serverCoordinate, localResolution) {
+    return Math.round(serverCoordinate * localResolution / COMMON_PIXELS);
+  }
+
+  // we need to translate coordinates back to the COMMON_PIXELS * COMMON_PIXELS game board
+  export function sendCoordinates(localCoordinate, localResolution) {
+    return Math.round(localCoordinate * COMMON_PIXELS / localResolution);
+  }

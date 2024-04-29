@@ -1,7 +1,13 @@
 import React, { Component } from 'react';
 import Ship from './Ship';
 import Asteroid from './Asteroid';
-import { randomNumBetweenExcluding } from '../utils/functions';
+import { Client, Room } from 'colyseus.js';
+import { GameState, INVALID } from '../../multiplayer/src/rooms/schema/MyRoomState';
+import { sendCoordinates } from '../utils/functions';
+
+const COLYSEUS_HOST = 'ws://localhost:2567';
+const GAME_ROOM = 'my_room';
+const client = new Client (COLYSEUS_HOST);
 
 const KEY = {
   LEFT:  37,
@@ -16,6 +22,19 @@ const KEY = {
 export class Reacteroids extends Component {
   constructor() {
     super();
+    /*
+    client.joinOrCreate(GAME_ROOM, {}, GameState).then(room => {
+      console.log(room.sessionId, "joined", room.name, room.state);
+      this.room = room;
+      this.room.onStateChange((newState) => { 
+        this.game_state = newState;
+        this.generateAsteroids(newState.level + 3);
+      });
+    }).catch(e => {
+        console.log("JOIN ERROR", e);
+        return null;
+    });
+*/
     this.state = {
       screen: {
         width: window.innerWidth,
@@ -30,7 +49,6 @@ export class Reacteroids extends Component {
         down  : 0,
         space : 0,
       },
-      asteroidCount: 3,
       currentScore: 0,
       topScore: localStorage['topscore'] || 0,
       inGame: false
@@ -69,7 +87,9 @@ export class Reacteroids extends Component {
 
     const context = this.refs.canvas.getContext('2d');
     this.setState({ context: context });
-    this.startGame();
+
+    //this.startGame();
+    this.gameOver();
     requestAnimationFrame(() => {this.update()});
   }
 
@@ -89,19 +109,19 @@ export class Reacteroids extends Component {
 
     // Motion trail
     context.fillStyle = '#000';
-    context.globalAlpha = 0.4;
+    context.globalAlpha = 0.1;
     context.fillRect(0, 0, this.state.screen.width, this.state.screen.height);
     context.globalAlpha = 1;
-
+/*
     // Next set of asteroids
     if(!this.asteroids.length){
       let count = this.state.asteroidCount + 1;
       this.setState({ asteroidCount: count });
       this.generateAsteroids(count)
     }
-
+*/
     // Check for colisions
-    this.checkCollisionsWith(this.bullets, this.asteroids);
+    this.checkCollisions(this.bullets, this.asteroids);
     this.checkCollisionsWithShip(this.ship, this.asteroids);
 
     // Remove or render
@@ -130,6 +150,51 @@ export class Reacteroids extends Component {
       currentScore: 0,
     });
 
+    client.joinOrCreate(GAME_ROOM, {}, GameState).then(room => {
+      this.room = room;
+      console.log(room.sessionId, "joined", this.room);
+
+      this.room.send("start");
+
+      // we'll just stash the whole server state image when state changes
+      // on specific events we'll actually take action on some of it
+      this.room.onStateChange((newState) => { 
+        console.log("state updated!", newState.rocks);
+        this.game_state = newState;
+        if (this.asteroids.length < newState.rocks.length) {
+          this.generateAsteroids(newState.rocks);
+        }
+      });
+
+      // server broadcasts destroy messages so clients can stay in sync
+      // just delete the corresponding array element
+      // and then grab the new asteroids into the client's set
+      this.room.onMessage("destroy", ((message) => {
+        console.log("destroy", message);
+        let [type, index] = message;
+        if (type == "rock") {
+          this['asteroids'].splice(index,1);
+        }
+      }));
+
+      // state change gets called but the state value is always the same?
+      // let's broadcast create events with state data
+      this.room.onMessage("create", ((message) => {
+        console.log("create", message);
+        let [type, rocks] = message;
+        if (type == "rock") {
+          this.game_state.rocks = rocks;
+          this.generateAsteroids(this.game_state.rocks);
+        }
+      }));
+
+    }).catch(e => {
+        console.log("JOIN ERROR", e);
+        return null;
+    });
+
+    // this.room.send("start");
+
     // Make ship
     let ship = new Ship({
       position: {
@@ -143,7 +208,8 @@ export class Reacteroids extends Component {
 
     // Make asteroids
     this.asteroids = [];
-    this.generateAsteroids(this.state.asteroidCount)
+    // don't generate asteroids here, do it from onStateChange
+//    this.generateAsteroids(this.state.asteroidCount)
   }
 
   gameOver(){
@@ -160,16 +226,15 @@ export class Reacteroids extends Component {
     }
   }
 
-  generateAsteroids(howMany){
-    let asteroids = [];
+  // pretty big assumption here that the client and server keep their asteroid arrays in sync
+  // on both sides we splice(index,1) to remove destroyed elements, and push() new ones
+  generateAsteroids(rocks){
     let ship = this.ship[0];
-    for (let i = 0; i < howMany; i++) {
+    let asteroids = this['asteroids'];
+    for (let i = asteroids.length; i < rocks.length; i++) {
+      let server = rocks[i];
       let asteroid = new Asteroid({
-        size: 80,
-        position: {
-          x: randomNumBetweenExcluding(0, this.state.screen.width, ship.position.x-60, ship.position.x+60),
-          y: randomNumBetweenExcluding(0, this.state.screen.height, ship.position.y-60, ship.position.y+60)
-        },
+        stats: server,
         create: this.createObject.bind(this),
         addScore: this.addScore.bind(this)
       });
@@ -181,6 +246,8 @@ export class Reacteroids extends Component {
     this[group].push(item);
   }
 
+  // needs to be phased out in favour of handling onMessage("destroy", [...])
+  // since all clients need to delete the same objects at the same time
   updateObjects(items, group){
     let index = 0;
     for (let item of items) {
@@ -193,15 +260,19 @@ export class Reacteroids extends Component {
     }
   }
 
-  checkCollisionsWith(items1, items2) {
+  checkCollisions(items1, items2) {
     var a = items1.length - 1;
     var b;
     for(a; a > -1; --a){
       b = items2.length - 1;
-      for(b; b > -1; --b){
+      for(b; b > -1; --b){        
         var item1 = items1[a];
         var item2 = items2[b];
         if(this.checkCollision(item1, item2)){
+          // oops, I need to send where the asteroid died since the server won't know
+          let serverX = sendCoordinates(item2.position.x, window.innerWidth);
+          let serverY = sendCoordinates(item2.position.y, window.innerHeight);
+          this.room.send("hit", ["rock", b, serverX, serverY]);
           item1.destroy();
           item2.destroy();
         }
@@ -210,11 +281,8 @@ export class Reacteroids extends Component {
   }
 
   checkCollisionsWithShip(items1, items2) {
-    var a = items1.length - 1;
-    var b;
-    for(a; a > -1; --a){
-      b = items2.length - 1;
-      for(b; b > -1; --b){
+    for(let a = 0; a < items1.length; a++){
+      for(let b = 0; b < items2.length; b++){
         var item1 = items1[a];
         var item2 = items2[b];
         if(this.checkCollision(item1, item2)){
@@ -224,14 +292,22 @@ export class Reacteroids extends Component {
     }
   }
 
+  // obj2 is always a rock
   checkCollision(obj1, obj2){
-    var vx = obj1.position.x - obj2.position.x;
-    var vy = obj1.position.y - obj2.position.y;
-    var length = Math.sqrt(vx * vx + vy * vy);
-    if(length < obj1.radius + obj2.radius){
-      return true;
+    if (obj2.radius === INVALID) return false;
+
+    const vx = obj1.position.x - obj2.position.x;
+    const vy = obj1.position.y - obj2.position.y;
+    const lengthSquared = vx * vx + vy * vy;
+    const collisionRadius = obj1.radius * obj1.radius + obj2.radius * obj2.radius;
+
+    // in case we have some bad math or status passing
+    if (isNaN(collisionRadius)) {
+      console.log("invalid hitbox", obj1, obj2);
+      return false;
     }
-    return false;
+
+    return (lengthSquared < collisionRadius);
   }
 
   render() {

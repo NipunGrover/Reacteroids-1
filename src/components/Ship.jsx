@@ -12,7 +12,7 @@ export default class Ship {
     this.rotation = 0;
     this.rotationSpeed = 4;
     this.speed = 0.08;
-    this.inertia = 0.99;
+    this.inertia = 1;
     this.radius = 20;
     this.lastShot = 0;
     this.create = args.create;
@@ -71,6 +71,27 @@ export default class Ship {
     this.create(particle, 'particles');
   }
 
+  // draw the ship
+  draw_ship (state, colour) {
+      const context = state.context;
+      context.save();
+      context.translate(this.position.x, this.position.y);
+      context.rotate(this.rotation * Math.PI / 180);
+      context.strokeStyle = colour;
+      context.fillStyle = '#000000';
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(0, -15);
+      context.lineTo(10, 10);
+      context.lineTo(5, 7);
+      context.lineTo(-5, 7);
+      context.lineTo(-10, 10);
+      context.closePath();
+      context.fill();
+      context.stroke();
+      context.restore();
+  }
+
   render(state){
     // Controls
     if(state.keys.up){
@@ -87,6 +108,9 @@ export default class Ship {
       this.create(bullet, 'bullets');
       this.lastShot = Date.now();
     }
+
+    // coloured trail
+    this.draw_ship (state, "#ff0fff");
 
     // Move
     this.position.x += this.velocity.x;
@@ -108,23 +132,6 @@ export default class Ship {
     if(this.position.y > state.screen.height) this.position.y = 0;
     else if(this.position.y < 0) this.position.y = state.screen.height;
 
-    // Draw
-    const context = state.context;
-    context.save();
-    context.translate(this.position.x, this.position.y);
-    context.rotate(this.rotation * Math.PI / 180);
-    context.strokeStyle = '#ffffff';
-    context.fillStyle = '#000000';
-    context.lineWidth = 2;
-    context.beginPath();
-    context.moveTo(0, -15);
-    context.lineTo(10, 10);
-    context.lineTo(5, 7);
-    context.lineTo(-5, 7);
-    context.lineTo(-10, 10);
-    context.closePath();
-    context.fill();
-    context.stroke();
-    context.restore();
+    this.draw_ship(state, '#ffffff');
   }
 }

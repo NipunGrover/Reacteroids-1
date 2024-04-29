@@ -9,9 +9,6 @@ export const COMMON_PIXELS: number = 1024;
 // here's a special co-ordinate value to check for
 export const INVALID: number = -1;
 
-// speed limit on rocks
-const MAX_V: number = 1;
-
 // return a random coordinate on the play field
 // it's 1024*1024 common pixels so this works in x or y
 function randomCoord(): number {
@@ -26,65 +23,78 @@ function randomSpeed(limit: number): number {
   return dir * (Math.random() + Math.random()) * limit;
 }
 
-// This state represents 1 player
-export class PlayerState extends Schema {
-  // status, position, and heading of player ship
-  @type("string") status: string = "ok"; // "ok" or "dead"
+export function asteroidVerticesXY(count: number, radius: number): XY[] {
+  var p: Array<XY> = new Array<XY>(count);
+  for (let i = 0; i < count; i++) {
+    p[i] = new XY (
+      (-Math.sin((360/count)*i*Math.PI/180) + Math.round(Math.random()*2-1)*Math.random()/3)*radius,
+      (-Math.cos((360/count)*i*Math.PI/180) + Math.round(Math.random()*2-1)*Math.random()/3)*radius
+    );
+  }
+  return p;
+};
+
+// this seems made-up but ok whatever
+export class XY extends Schema {
   @type("number") x: number;
   @type("number") y: number;
-  @type("number") r: number;
 
-  constructor(x: number, y: number, r: number) {
-    // players won't start off dead, don't need status in constructor... yet
+  constructor (x: number, y: number) {
     super();
     this.x = x;
     this.y = y;
-    this.r = r;
   }
 }
 
 // This state represents all of the rocks in the level
 // It uses arrays internally for size, position, and velocity of each
 export class RockState extends Schema {
-  static MAX_SIZE: number = 3;
+  static MAX_SIZE: number = 80;
+  static MAX_V: number = 0.5;
 
   // size, position, and movement of rocks... heading doesn't really matter
   // player ship positions are updated by the client but rocks depend on game room I think
-  @type(["number"]) size: number[];
-  @type(["number"]) x: number[];
-  @type(["number"]) y: number[];
-  @type(["number"]) dx: number [];
-  @type(["number"]) dy: number [];
+  @type(XY) position: XY;
+  @type(XY) speed: XY;
+  @type([XY]) vertices: XY[];
+  @type("number") radius: number;
+  @type("number") spin: number;
 
-  constructor (level: number = 1) {
-    // create a bunch of random rock positions at the start of each level
-    // starting difficulty is 4
+  // args is a map of x, y, size
+  constructor(x: number, y: number, size: number, level: number) {
     super();
-    const rocks: number = level + 3;
-    this.size = new ArraySchema<number>(...(new Array<number>(rocks).fill(RockState.MAX_SIZE)));
-
-    this.x = new ArraySchema<number>(...Array<number>(rocks).fill(INVALID));
-    this.y = new ArraySchema<number>(...Array<number>(rocks).fill(INVALID));
-    this.dx = new ArraySchema<number>(...Array<number>(rocks).fill(0));
-    this.dy = new ArraySchema<number>(...Array<number>(rocks).fill(0));
-
-    for (var i = 0; i < rocks; i++) {
-      this.x[i] = randomCoord();
-      this.y[i] = randomCoord();
-      this.dx[i] = randomSpeed(MAX_V + level);
-      this.dy[i] = randomSpeed(MAX_V + level);
-    }
+    this.position = new XY(x, y);
+    this.speed = new XY(randomSpeed(RockState.MAX_V + level), randomSpeed(RockState.MAX_V + level));
+    this.radius = size;
+    this.spin = Math.random()*2 -1; //-1 to +1
+    this.vertices = asteroidVerticesXY(8, this.radius);
+    // do we need these here? there's gotta be a better way
+    /*
+    this.r = 0;
+    this.score = (80/this.radius)*5;
+    this.create = args.create;
+    this.addScore = args.addScore;
+    */
   }
 }
 
 export class GameState extends Schema {
-  @type([PlayerState]) players: PlayerState[];
-  @type(RockState) rocks: RockState;
+//  @type([PlayerState]) players: PlayerState[];
+  @type([RockState]) rocks: RockState[];
+//  @type([BulletState]) bullets: BulletState[];
   @type("number") level: number = 1;
 
-  constructor() {
+  constructor(level: number = 1) {
     super();
-    this.rocks = new RockState(this.level);
-    this.players = new ArraySchema<PlayerState>(...(new Array<PlayerState>));
+    this.level = level;
+    this.rocks = new ArraySchema<RockState>(...(new Array<RockState>));
+//    this.players = new ArraySchema<PlayerState>(...(new Array<PlayerState>));
+//    this.bullets = new ArraySchema<BulletState>(...(new Array<BulletState>));
+
+    for (let i = 0; i < this.level+3; i++) {
+      this.rocks.push (new RockState(
+        randomCoord(), randomCoord(), RockState.MAX_SIZE, this.level
+      ));
+    };
   }
 }

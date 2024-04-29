@@ -1,25 +1,35 @@
 import Particle from './Particle';
-import { asteroidVertices, randomNumBetween } from '../utils/functions';
+import { getCoordinates, randomNumBetween } from '../utils/functions';
 
 export default class Asteroid {
+  // we use RockState from the server
+  // position, speed, radius, spin, vertices
   constructor(args) {
-    this.position = args.position
-    this.velocity = {
-      x: randomNumBetween(-1.5, 0.1),
-      y: randomNumBetween(-1.5, 0.1 )
-    }
+    // translate [1024,1024] common pixels to fit screen resolution
+    console.log("asteroid constructor", args.stats);
+    this.position = {
+      x: getCoordinates(args.stats.position.x, window.innerWidth), 
+      y: getCoordinates(args.stats.position.y, window.innerHeight)
+    };
+    this.speed = {
+      x: getCoordinates(args.stats.speed.x, window.innerWidth),
+      y: getCoordinates(args.stats.speed.y, window.innerHeight)
+    };
+    this.radius = args.stats.radius;
+    this.rotationSpeed = args.stats.spin;
     this.rotation = 0;
-    this.rotationSpeed = randomNumBetween(-1, 1)
-    this.radius = args.size;
-    this.score = (80/this.radius)*5;
+    this.vertices = args.stats.vertices;
+    this.score = (80/args.stats.radius)*5;
     this.create = args.create;
     this.addScore = args.addScore;
-    this.vertices = asteroidVertices(8, args.size)
   }
 
   destroy(){
-    this.delete = true;
+//  delete asteroids when the server says to!
+//    this.delete = true;
     this.addScore(this.score);
+    const p = this.position;
+    const r = this.radius;
 
     // Explode
     for (let i = 0; i < this.radius; i++) {
@@ -27,8 +37,8 @@ export default class Asteroid {
         lifeSpan: randomNumBetween(60, 100),
         size: randomNumBetween(1, 3),
         position: {
-          x: this.position.x + randomNumBetween(-this.radius/4, this.radius/4),
-          y: this.position.y + randomNumBetween(-this.radius/4, this.radius/4)
+          x: p.x + randomNumBetween(-r/4, r/4),
+          y: p.y + randomNumBetween(-r/4, r/4)
         },
         velocity: {
           x: randomNumBetween(-1.5, 0.1),
@@ -37,29 +47,19 @@ export default class Asteroid {
       });
       this.create(particle, 'particles');
     }
-
-    // Break into smaller asteroids
-    if(this.radius > 10){
-      for (let i = 0; i < 2; i++) {
-        let asteroid = new Asteroid({
-
-          size: this.radius/2,
-          position: {
-            x: randomNumBetween(-10, 20)+this.position.x,
-            y: randomNumBetween(-10, 20)+this.position.y
-          },
-          create: this.create.bind(this),
-          addScore: this.addScore.bind(this)
-        });
-        this.create(asteroid, 'asteroids');
-      }
-    }
+    // move code for creating smaller asteroids into server
   }
 
   render(state){
-    // Move
-    this.position.x += this.velocity.x;
-    this.position.y += this.velocity.y;
+    // Move is handled client side, 
+    // update server state only when we add/destroy rocks if possible
+
+    if (isNaN(this.speed.x) || isNaN(this.speed.y)) {
+      console.log("stuck asteroid?", this);
+    }
+    
+    this.position.x += this.speed.x;
+    this.position.y += this.speed.y;
 
     // Rotation
     this.rotation += this.rotationSpeed;
@@ -70,11 +70,11 @@ export default class Asteroid {
       this.rotation += 360;
     }
 
-    // Screen edges
-    if(this.position.x > state.screen.width + this.radius) this.position.x = -this.radius;
-    else if(this.position.x < -this.radius) this.position.x = state.screen.width + this.radius;
-    if(this.position.y > state.screen.height + this.radius) this.position.y = -this.radius;
-    else if(this.position.y < -this.radius) this.position.y = state.screen.height + this.radius;
+    // Screen edges ... why are my asteroids getting stuck on screen edges?
+    this.position.x %= state.screen.width;
+    if (this.position.x < this.radius) this.position.x = state.screen.width - this.position.x;
+    this.position.y %= state.screen.height;
+    if (this.position.y < this.radius) this.position.y = state.screen.height - this.position.y;
 
     // Draw
     const context = state.context;
@@ -85,7 +85,7 @@ export default class Asteroid {
     context.lineWidth = 2;
     context.beginPath();
     context.moveTo(0, -this.radius);
-    for (let i = 1; i < this.vertices.length; i++) {
+    for (let i = 0; i < this.vertices.length; i++) {
       context.lineTo(this.vertices[i].x, this.vertices[i].y);
     }
     context.closePath();
