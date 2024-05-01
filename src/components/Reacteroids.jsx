@@ -36,7 +36,9 @@ export class Reacteroids extends Component {
       currentScore: 0,
       topScore: localStorage['topscore'] || 0,
       inGame: false,
-      pinkState: false
+      pinkState: false,
+      pauseState: true,
+      rebelMode: false
     }
     this.ship = [];
     this.asteroids = [];
@@ -148,6 +150,7 @@ export class Reacteroids extends Component {
 
   startGame(){
     this.setState({
+      pauseState: false,
       inGame: true,
       currentScore: 0,
     });
@@ -278,6 +281,7 @@ export class Reacteroids extends Component {
     let ingame
     let message;
     let Pinkmessage;
+    let Pausemessage;
 
     if (this.state.currentScore <= 0) {
       message = '0 points... So sad.';
@@ -293,7 +297,33 @@ export class Reacteroids extends Component {
       Pinkmessage = 'Pink state off'
     }
 
-    if(!this.state.inGame){
+    if(this.state.pauseState){
+      Pausemessage = (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-16 z-1 text-center">
+          <p>Are you ready??? Choose your side!!!</p>
+          <button className="border-4 border-white bg-transparent text-white text-m px-10 py-5 m-5 cursor-pointer hover:bg-white hover:text-black"
+            onClick={() => {
+              this.setState({
+                rebelMode: true
+              })
+              this.startGame.bind(this);
+            }}>
+            Rebel
+          </button>
+          <button className="border-4 border-white bg-transparent text-white text-m px-10 py-5 m-5 cursor-pointer hover:bg-white hover:text-black"
+            onClick={() => {
+              this.setState({
+                rebelMode: false
+              })
+              this.startGame.bind(this);
+            }}>
+            Sith
+          </button>
+        </div>
+      )
+    }
+
+    if(!this.state.inGame && !this.state.pauseState){
       endgame = (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-16 z-1 text-center">
           <p>Game over, man!</p>
@@ -313,9 +343,12 @@ export class Reacteroids extends Component {
       )
     }
 
+    
+
     return (
       <div>
         { endgame }
+        { Pausemessage }
         
         <span className="block absolute top-15 z-1 text-sm left-20" >Score: {this.state.currentScore}</span>
         <span className="block absolute top-15 z-1 text-sm right-20" >Top Score: {this.state.topScore}</span>

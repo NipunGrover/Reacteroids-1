@@ -58,7 +58,7 @@ export default class Ship {
     this.velocity.y -= Math.cos(-this.rotation*Math.PI/180) * this.speed;
 
     // Thruster particles
-    let posDelta = rotatePoint({x:0, y:-10}, {x:0,y:0}, (this.rotation-180) * Math.PI / 180);
+    let posDelta = rotatePoint({x:0, y:-30}, {x:0,y:0}, (this.rotation-180) * Math.PI / 180);
     const particle = new Particle({
       lifeSpan: randomNumBetween(20, 40),
       size: randomNumBetween(1, 3),
@@ -82,18 +82,40 @@ export default class Ship {
     context.translate(this.position.x, this.position.y);
     context.rotate(this.rotation * Math.PI / 180);
     context.strokeStyle = color;
-    context.fillStyle = '#000000';
+    context.fillStyle = '#AA336A';
     context.lineWidth = 2;
+    // create rocket body
     context.beginPath();
-    context.moveTo(0, -15);
-    context.lineTo(10, 10);
-    context.lineTo(5, 7);
-    context.lineTo(-5, 7);
-    context.lineTo(-10, 10);
+    context.moveTo(0, -30);
+    context.quadraticCurveTo(-15, 10, -25, 50);
+    context.lineTo(25, 50);
+    context.quadraticCurveTo(15, 10, 0, -30);
     context.closePath();
     context.fill();
     context.stroke();
-    context.restore();
+
+     // rocket window
+     context.beginPath();
+     context.arc(0, 20, 7, 0, 2 * Math.PI);
+     context.fillStyle = 'blue';
+     context.fill();
+     context.lineWidth = 2;
+     context.strokeStyle = color;
+     context.stroke();
+
+     // rocket wings
+     context.beginPath();
+     context.moveTo(-25, 50);
+     context.lineTo(-30, 60);
+     context.lineTo(30, 60);
+     context.lineTo(25, 50);
+     context.closePath();
+     context.fillStyle = 'black';
+     context.fill();
+     context.lineWidth = 2;
+     context.strokeStyle = color;
+     context.stroke();
+     context.restore();
   }
 
   render(state){
