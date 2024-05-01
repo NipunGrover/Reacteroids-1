@@ -6,7 +6,7 @@ export default class Asteroid {
   // position, speed, radius, spin, vertices
   constructor(args) {
     // translate [1024,1024] common pixels to fit screen resolution
-    console.log("asteroid constructor", args.stats);
+    //console.log("asteroid constructor", args.stats);
     this.position = {
       x: getCoordinates(args.stats.position.x, window.innerWidth), 
       y: getCoordinates(args.stats.position.y, window.innerHeight)
@@ -17,7 +17,7 @@ export default class Asteroid {
     };
     this.radius = args.stats.radius;
     this.rotationSpeed = args.stats.spin;
-    this.rotation = 0;
+    this.rotation = args.stats.rotation;
     this.vertices = args.stats.vertices;
     this.score = (80/args.stats.radius)*5;
     this.create = args.create;
@@ -51,13 +51,10 @@ export default class Asteroid {
   }
 
   render(state){
+    // no longer handling move on client side, just draw in the state server says to
+/*
     // Move is handled client side, 
     // update server state only when we add/destroy rocks if possible
-
-    if (isNaN(this.speed.x) || isNaN(this.speed.y)) {
-      console.log("stuck asteroid?", this);
-    }
-    
     this.position.x += this.speed.x;
     this.position.y += this.speed.y;
 
@@ -75,7 +72,7 @@ export default class Asteroid {
     if (this.position.x < this.radius) this.position.x = state.screen.width - this.position.x;
     this.position.y %= state.screen.height;
     if (this.position.y < this.radius) this.position.y = state.screen.height - this.position.y;
-
+*/
     // Draw
     const context = state.context;
     context.save();

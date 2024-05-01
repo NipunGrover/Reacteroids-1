@@ -6,7 +6,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GameState = exports.RockState = exports.XY = exports.asteroidVerticesXY = exports.INVALID = exports.COMMON_PIXELS = void 0;
+exports.GameState = exports.RockState = exports.ShipState = exports.XY = exports.asteroidVerticesXY = exports.INVALID = exports.COMMON_PIXELS = void 0;
 const schema_1 = require("@colyseus/schema");
 // clients all have different resolutions
 // we need to translate their relative x,y coordinates into common values
@@ -15,8 +15,6 @@ const schema_1 = require("@colyseus/schema");
 exports.COMMON_PIXELS = 1024;
 // here's a special co-ordinate value to check for
 exports.INVALID = -1;
-// speed limit on rocks
-const MAX_V = 1;
 // return a random coordinate on the play field
 // it's 1024*1024 common pixels so this works in x or y
 function randomCoord() {
@@ -53,21 +51,40 @@ __decorate([
 __decorate([
     (0, schema_1.type)("number")
 ], XY.prototype, "y", void 0);
+// represent player ships 
+// Since these are controlled basically all the time I guess we're stuck relaying position every frame
+// At least we can skip tracking their speed vector
+// Can't use a MapSchema except mapping string->string so these are getting arrayed instead
+class ShipState extends schema_1.Schema {
+    constructor(position, rotation) {
+        super();
+        this.pos = position;
+        this.rtn = rotation;
+    }
+}
+exports.ShipState = ShipState;
+__decorate([
+    (0, schema_1.type)(XY)
+], ShipState.prototype, "pos", void 0);
+__decorate([
+    (0, schema_1.type)('number')
+], ShipState.prototype, "rtn", void 0);
 // This state represents all of the rocks in the level
 // It uses arrays internally for size, position, and velocity of each
 class RockState extends schema_1.Schema {
     static { this.MAX_SIZE = 80; }
+    static { this.MAX_V = 0.5; }
     // args is a map of x, y, size
     constructor(x, y, size, level) {
         super();
         this.position = new XY(x, y);
-        this.speed = new XY(randomSpeed(MAX_V + level), randomSpeed(MAX_V + level));
+        this.speed = new XY(randomSpeed(RockState.MAX_V + level), randomSpeed(RockState.MAX_V + level));
         this.radius = size;
         this.spin = Math.random() * 2 - 1; //-1 to +1
         this.vertices = asteroidVerticesXY(8, this.radius);
+        this.rotation = 0;
         // do we need these here? there's gotta be a better way
         /*
-        this.r = 0;
         this.score = (80/this.radius)*5;
         this.create = args.create;
         this.addScore = args.addScore;
@@ -90,6 +107,9 @@ __decorate([
 __decorate([
     (0, schema_1.type)("number")
 ], RockState.prototype, "spin", void 0);
+__decorate([
+    (0, schema_1.type)("number")
+], RockState.prototype, "rotation", void 0);
 class GameState extends schema_1.Schema {
     constructor(level = 1) {
         super();
@@ -97,7 +117,7 @@ class GameState extends schema_1.Schema {
         this.level = 1;
         this.level = level;
         this.rocks = new schema_1.ArraySchema(...(new Array));
-        //    this.players = new ArraySchema<PlayerState>(...(new Array<PlayerState>));
+        this.ships = new schema_1.ArraySchema(...(new Array));
         //    this.bullets = new ArraySchema<BulletState>(...(new Array<BulletState>));
         for (let i = 0; i < this.level + 3; i++) {
             this.rocks.push(new RockState(randomCoord(), randomCoord(), RockState.MAX_SIZE, this.level));
@@ -106,6 +126,9 @@ class GameState extends schema_1.Schema {
     }
 }
 exports.GameState = GameState;
+__decorate([
+    (0, schema_1.type)([ShipState])
+], GameState.prototype, "ships", void 0);
 __decorate([
     (0, schema_1.type)([RockState])
 ], GameState.prototype, "rocks", void 0);

@@ -2,28 +2,44 @@ import Bullet from './Bullet';
 import Particle from './Particle';
 import { rotatePoint, randomNumBetween } from '../utils/functions';
 
-export default class Ship {
+export class Ship {
   constructor(args) {
-    this.position = args.position
-    this.velocity = {
-      x: 0,
-      y: 0
-    }
-    this.rotation = 0;
-    this.rotationSpeed = 4;
-    this.speed = 0.08;
-    this.inertia = 1;
-    this.radius = 20;
-    this.lastShot = 0;
+    console.log("construct npc ship");
+    this.position = args.position;
+    this.rotation = args.rotation;
     this.create = args.create;
-    this.onDie = args.onDie;
+
+    this.radius = 20;
+    this.delete = false;
   }
 
-  destroy(){
-    this.delete = true;
-    this.onDie();
+  // draw the ship
+  draw_ship (state, colour) {
+    const context = state.context;
+    context.save();
+    context.translate(this.position.x, this.position.y);
+    context.rotate(this.rotation * Math.PI / 180);
+    context.strokeStyle = colour;
+    context.fillStyle = '#000000';
+    context.lineWidth = 2;
+    context.beginPath();
+    context.moveTo(0, -15);
+    context.lineTo(10, 10);
+    context.lineTo(5, 7);
+    context.lineTo(-5, 7);
+    context.lineTo(-10, 10);
+    context.closePath();
+    context.fill();
+    context.stroke();
+    context.restore();
+  }
 
-    // Explode
+  render(state){
+    console.log("rendering npc ship");
+    this.draw_ship(state, '#dddddd');
+  }
+
+  explode () {
     for (let i = 0; i < 60; i++) {
       const particle = new Particle({
         lifeSpan: randomNumBetween(60, 100),
@@ -39,6 +55,33 @@ export default class Ship {
       });
       this.create(particle, 'particles');
     }
+  }
+
+  destroy() {
+    this.explode();
+  }
+}
+
+export class PlayerShip extends Ship {
+  constructor(args) {
+    super(args);
+    //console.log("create player ship", args);
+    this.velocity = {
+      x: 0,
+      y: 0
+    }
+    this.rotationSpeed = 4;
+    this.speed = 0.08;
+    this.inertia = 1;
+    this.lastShot = 0;
+    this.onDie = args.onDie;
+    this.delete = false;
+  }
+
+  destroy(){
+//    this.delete = true;
+    this.onDie();
+    this.explode();
   }
 
   rotate(dir){
@@ -71,28 +114,8 @@ export default class Ship {
     this.create(particle, 'particles');
   }
 
-  // draw the ship
-  draw_ship (state, colour) {
-      const context = state.context;
-      context.save();
-      context.translate(this.position.x, this.position.y);
-      context.rotate(this.rotation * Math.PI / 180);
-      context.strokeStyle = colour;
-      context.fillStyle = '#000000';
-      context.lineWidth = 2;
-      context.beginPath();
-      context.moveTo(0, -15);
-      context.lineTo(10, 10);
-      context.lineTo(5, 7);
-      context.lineTo(-5, 7);
-      context.lineTo(-10, 10);
-      context.closePath();
-      context.fill();
-      context.stroke();
-      context.restore();
-  }
-
   render(state){
+//    console.log("rendering player ship");
     // Controls
     if(state.keys.up){
       this.accelerate(1);

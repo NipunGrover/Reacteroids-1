@@ -1,8 +1,9 @@
 import { Room, Client } from "@colyseus/core";
-import { GameState, RockState, COMMON_PIXELS, INVALID } from "./schema/MyRoomState";
+import { GameState, RockState, COMMON_PIXELS, XY, ShipState } from "./schema/MyRoomState";
 
 export class MyRoom extends Room<GameState> {
-  maxClients = 4;
+  // remember which client owns which ship
+  players: Map<string, number> = new Map<string, number>();
 
   onCreate (options: any) {
     // start a room with asteroids at level 1 (4 asteroids)
@@ -11,8 +12,35 @@ export class MyRoom extends Room<GameState> {
     this.onMessage("hit", (client, message) => {
       let [type, index, x, y] = message;
       console.log("hit", type, index);
+      
       if (type == "rock") {
+        // destroyRock does a lot of stuff
         this.destroyRock (index, x, y);
+      } else if (type == "ship") {
+        // wipe out the ship data since it will regenerate within one frame
+        this.players.clear();
+        this.state.ships.splice(0, this.state.ships.length);
+      }
+    });
+
+    this.onMessage("ship", (client, message) => {
+      let [x, y, r] = message;
+//      console.log("tracking",this.state.ships.length,"for",this.players.size,"players");
+      if (this.players.has(client.id)) {
+        const index = this.players.get(client.id);
+        // sometimes the index gets messed up?
+        // choose nuclear option against the player index
+        if (index < this.state.ships.length) {
+          //console.log("update values for", index);
+          this.state.ships[index].pos = new XY(x, y);
+          this.state.ships[index].rtn = r;
+        } else {
+          this.players.delete(client.id);
+        }
+      } else {
+        //console.log("push values", x, y, r);
+        this.state.ships.push (new ShipState(new XY(x, y), r));
+        this.players.set(client.id, this.state.ships.length-1);
       }
     });
 
@@ -28,39 +56,46 @@ export class MyRoom extends Room<GameState> {
 
   // server tick
   update(deltaTime: number) {
-//    this.moveRocks(deltaTime);
+    this.moveRocks(deltaTime);
   }
 
-/*
   // update asteroid positions
   moveRocks(deltaTime: number) {
     for (let i = 0; i < this.state.rocks.length; i++) {
       let r: RockState = this.state.rocks[i];
-      if (r.radius > INVALID) {
-//        console.log("updating:", r.x, r.y);
+      //console.log("updating:", i);
         // should multiply dx/dy by deltaTime
-        if (r.position.x+r.speed.x < 0) { 
-          r.position.x = COMMON_PIXELS-r.speed.x; 
-        } else {
-          r.position.x = (r.position.x+r.speed.x) % COMMON_PIXELS;
-        }
-        if (r.position.y+r.speed.y < 0) { 
-          r.position.y = COMMON_PIXELS-r.speed.y; 
-        } else {
-          r.position.y = (r.position.y+r.speed.y) % COMMON_PIXELS;
-        }
+      r.rotation = (r.rotation + r.spin) % 360;
+
+      if (r.position.x+r.speed.x < 0) { 
+        r.position.x = COMMON_PIXELS-r.position.x; 
+      } else {
+        r.position.x = (r.position.x+r.speed.x) % COMMON_PIXELS;
+      }
+      if (r.position.y+r.speed.y < 0) { 
+        r.position.y = COMMON_PIXELS-r.position.y; 
+      } else {
+        r.position.y = (r.position.y+r.speed.y) % COMMON_PIXELS;
       }
     }
   }
-*/
 
   onJoin (client: Client, options: any) {
     console.log(client.sessionId, "joined!");
-    this.state.setDirty("level");
   }
 
+  // clean up player leaving: 
+  // 1. their player map entry
+  // 2. their npc ship entry
   onLeave (client: Client, consented: boolean) {
     console.log(client.sessionId, "left!");
+    if (this.players.has(client.id)) {
+      const index = this.players.get(client.id);
+      this.players.delete(client.id);
+      if (index < this.state.ships.length) {
+        this.state.ships.slice(index, 1);
+      }
+    }
   }
 
   onDispose() {
@@ -73,19 +108,20 @@ export class MyRoom extends Room<GameState> {
     }
   }
 
+  // commenting out broadcasts / messages no longer needed if we move asteroids server-side
   destroyRock (index: number, x: number, y: number) {
-    this.broadcast("destroy", ["rock", index, x, y]);
-    // rather than delete, mark invalid
+    // we get full asteroid info on state updates so no need to broadcast
+//     this.broadcast("destroy", ["rock", index]);
     if (index >= this.state.rocks.length) {
       console.log("asteroid position", index, "does not exist");
       return;
     }
     let a = this.state.rocks[index];
     if (a.radius > 10) {
-      this.createRock (a.radius/2, x, y);
-      this.createRock (a.radius/2, x, y);
-      console.log("broadcasting create rock", x, y);
-      this.broadcast("create", ["rock", this.state.rocks]);
+      this.createRock (a.radius/2, a.position.x, a.position.y);
+      this.createRock (a.radius/2, a.position.x, a.position.y);
+//      console.log("broadcasting create rock", x, y);
+//      this.broadcast("create", ["rock", this.state.rocks]);
     }
     this.state.rocks.splice(index, 1);
     console.log("state change", this.state.rocks.length);

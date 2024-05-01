@@ -1,4 +1,4 @@
-import { ArraySchema, Schema, Context, type } from "@colyseus/schema";
+import { MapSchema, ArraySchema, Schema, Context, type } from "@colyseus/schema";
 
 // clients all have different resolutions
 // we need to translate their relative x,y coordinates into common values
@@ -46,6 +46,21 @@ export class XY extends Schema {
   }
 }
 
+// represent player ships 
+// Since these are controlled basically all the time I guess we're stuck relaying position every frame
+// At least we can skip tracking their speed vector
+// Can't use a MapSchema except mapping string->string so these are getting arrayed instead
+export class ShipState extends Schema {
+  @type(XY) pos: XY;
+  @type('number') rtn: number;
+
+  constructor (position: XY, rotation: number) {
+    super();
+    this.pos = position;
+    this.rtn = rotation;
+  }
+}
+
 // This state represents all of the rocks in the level
 // It uses arrays internally for size, position, and velocity of each
 export class RockState extends Schema {
@@ -59,6 +74,7 @@ export class RockState extends Schema {
   @type([XY]) vertices: XY[];
   @type("number") radius: number;
   @type("number") spin: number;
+  @type("number") rotation: number;
 
   // args is a map of x, y, size
   constructor(x: number, y: number, size: number, level: number) {
@@ -68,9 +84,9 @@ export class RockState extends Schema {
     this.radius = size;
     this.spin = Math.random()*2 -1; //-1 to +1
     this.vertices = asteroidVerticesXY(8, this.radius);
+    this.rotation = 0;
     // do we need these here? there's gotta be a better way
     /*
-    this.r = 0;
     this.score = (80/this.radius)*5;
     this.create = args.create;
     this.addScore = args.addScore;
@@ -79,7 +95,7 @@ export class RockState extends Schema {
 }
 
 export class GameState extends Schema {
-//  @type([PlayerState]) players: PlayerState[];
+  @type([ShipState]) ships: ShipState[];
   @type([RockState]) rocks: RockState[];
 //  @type([BulletState]) bullets: BulletState[];
   @type("number") level: number = 1;
@@ -88,7 +104,7 @@ export class GameState extends Schema {
     super();
     this.level = level;
     this.rocks = new ArraySchema<RockState>(...(new Array<RockState>));
-//    this.players = new ArraySchema<PlayerState>(...(new Array<PlayerState>));
+    this.ships = new ArraySchema<ShipState>(...(new Array<ShipState>));
 //    this.bullets = new ArraySchema<BulletState>(...(new Array<BulletState>));
 
     for (let i = 0; i < this.level+3; i++) {
