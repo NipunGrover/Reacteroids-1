@@ -14,13 +14,13 @@ export class Ship {
   }
 
   // draw the ship
-  draw_ship (state, colour) {
+  draw_ship (state, colour, fill) {
     const context = state.context;
     context.save();
     context.translate(this.position.x, this.position.y);
     context.rotate(this.rotation * Math.PI / 180);
     context.strokeStyle = colour;
-    context.fillStyle = '#000000';
+    context.fillStyle = fill;
     context.lineWidth = 2;
     context.beginPath();
     context.moveTo(0, -15);
@@ -36,7 +36,7 @@ export class Ship {
 
   render(state){
 //    console.log("rendering npc ship");
-    this.draw_ship(state, '#dddddd');
+    this.draw_ship(state, '#ff0fff', '#000000');
   }
 
   explode () {
@@ -133,7 +133,7 @@ export class PlayerShip extends Ship {
     }
 
     // coloured trail
-    this.draw_ship (state, "#ff0fff");
+    this.draw_ship (state, "#ff0fff", '#000000');
 
     // Move
     this.position.x += this.velocity.x;
@@ -155,6 +155,6 @@ export class PlayerShip extends Ship {
     if(this.position.y > state.screen.height) this.position.y = 0;
     else if(this.position.y < 0) this.position.y = state.screen.height;
 
-    this.draw_ship(state, '#ffffff');
+    this.draw_ship(state, '#ffffff', '#000000');
   }
 }

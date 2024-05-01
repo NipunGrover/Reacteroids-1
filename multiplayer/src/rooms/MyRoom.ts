@@ -1,5 +1,5 @@
 import { Room, Client } from "@colyseus/core";
-import { GameState, RockState, COMMON_PIXELS, XY, ShipState } from "./schema/MyRoomState";
+import { GameState, RockState, COMMON_PIXELS, XY, ShipState, BulletState } from "./schema/MyRoomState";
 
 export class MyRoom extends Room<GameState> {
   // remember which client owns which ship
@@ -28,19 +28,26 @@ export class MyRoom extends Room<GameState> {
 //      console.log("tracking",this.state.ships.length,"for",this.players.size,"players");
       if (this.players.has(client.id)) {
         const index = this.players.get(client.id);
-        // sometimes the index gets messed up?
-        // choose nuclear option against the player index
         if (index < this.state.ships.length) {
           //console.log("update values for", index);
           this.state.ships[index].pos = new XY(x, y);
           this.state.ships[index].rtn = r;
         } else {
+          // sometimes the index gets messed up?
+          // choose nuclear option against the player index
           this.players.delete(client.id);
         }
       } else {
         //console.log("push values", x, y, r);
         this.state.ships.push (new ShipState(new XY(x, y), r));
         this.players.set(client.id, this.state.ships.length-1);
+      }
+    });
+
+    this.onMessage("shot", (client, message) => {
+      let positions = message;
+      for (let position of positions) {
+        this.state.bullets.push (new BulletState(new XY(position.x, position.y)));
       }
     });
 

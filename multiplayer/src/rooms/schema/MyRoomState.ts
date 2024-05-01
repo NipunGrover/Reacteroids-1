@@ -46,6 +46,19 @@ export class XY extends Schema {
   }
 }
 
+// represent bullets
+// like player ships we just get an update for each bullet
+// this makes it zero effort to track positions and hits
+// maybe we make it more efficient by batching bullet positions per message from each client
+export class BulletState extends Schema {
+  @type(XY) pos: XY;
+
+  constructor (position: XY) {
+    super();
+    this.pos = position;
+  }
+}
+
 // represent player ships 
 // Since these are controlled basically all the time I guess we're stuck relaying position every frame
 // At least we can skip tracking their speed vector
@@ -97,7 +110,7 @@ export class RockState extends Schema {
 export class GameState extends Schema {
   @type([ShipState]) ships: ShipState[];
   @type([RockState]) rocks: RockState[];
-//  @type([BulletState]) bullets: BulletState[];
+  @type([BulletState]) bullets: BulletState[];
   @type("number") level: number = 1;
 
   constructor(level: number = 1) {
@@ -105,9 +118,9 @@ export class GameState extends Schema {
     this.level = level;
     this.rocks = new ArraySchema<RockState>(...(new Array<RockState>));
     this.ships = new ArraySchema<ShipState>(...(new Array<ShipState>));
-//    this.bullets = new ArraySchema<BulletState>(...(new Array<BulletState>));
+    this.bullets = new ArraySchema<BulletState>(...(new Array<BulletState>));
 
-    for (let i = 0; i < this.level+3; i++) {
+    for (let i = 0; i < this.level+2; i++) {
       this.rocks.push (new RockState(
         randomCoord(), randomCoord(), RockState.MAX_SIZE, this.level
       ));
