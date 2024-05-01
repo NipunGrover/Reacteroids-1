@@ -124,16 +124,16 @@ export class Reacteroids extends Component {
     this.updateObjects(this.bullets, 'bullets')
     this.updateObjects(this.ship, 'ship')
 
-    var bulletPositions;
+    var bulletPositions = [];
     for (let b of this['bullets']) {
       if (b.player) {
         bulletPositions.push({x: b.position.x, y: b.position.y});
       }
     }
 
-    if (this.room && ship) {
-      this.room.send("ship", [ship.position.x, ship.position.y, ship.rotation]);
-      this.room.send("shot", bulletPositions);
+    if (this.room) {
+      if (ship) { this.room.send("ship", [ship.position.x, ship.position.y, ship.rotation]); }
+      if (bulletPositions.length > 0) { this.room.send("shot", bulletPositions); }
     }
 
     context.restore();

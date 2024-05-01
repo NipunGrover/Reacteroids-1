@@ -45,9 +45,10 @@ export class MyRoom extends Room<GameState> {
     });
 
     this.onMessage("shot", (client, message) => {
+      console.log("shot update", message);
       let positions = message;
-      for (let position of positions) {
-        this.state.bullets.push (new BulletState(new XY(position.x, position.y)));
+      for (let i = 0; i < positions.length; i++) {
+        this.state.bullets.push (new BulletState(new XY(positions[i].x, positions[i].y)));
       }
     });
 
