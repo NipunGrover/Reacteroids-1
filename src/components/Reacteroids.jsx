@@ -5,7 +5,7 @@ import { Client, Room } from 'colyseus.js';
 import { GameState, INVALID } from '../../multiplayer/src/rooms/schema/MyRoomState';
 import { sendCoordinates } from '../utils/functions';
 
-const COLYSEUS_HOST = 'ws://localhost:2567';
+const COLYSEUS_HOST = 'ws://10.144.18.24:2567';
 const GAME_ROOM = 'my_room';
 const client = new Client (COLYSEUS_HOST);
 
@@ -16,28 +16,15 @@ const KEY = {
   A: 65,
   D: 68,
   W: 87,
-  SPACE: 32
+  SPACE: 32,
+  ESCAPE: 27
 };
 
 export class Reacteroids extends Component {
   constructor() {
     super();
 
-    client.joinOrCreate(GAME_ROOM, {}, GameState).then(room => {
-      console.log(room.sessionId, "joined", room.name, room.state);
-      this.room = room;
-      this.room.onStateChange((newState) => { 
-//        console.log("state updated!");
-        this.game_state = newState;
-        this.generateAsteroids(newState.rocks);
-        this.generateShips(newState.ships);
-        console.log("ships to draw:", this.ship.length);
-      });
-
-    }).catch(e => {
-        console.log("JOIN ERROR", e);
-        return null;
-    });
+    // move createOrJoinRoom code to startGame
 
     this.state = {
       screen: {
@@ -82,6 +69,11 @@ export class Reacteroids extends Component {
     this.setState({
       keys : keys
     });
+
+    // force quit
+    if(e.keyCode === KEY.ESCAPE) {
+      this.gameOver();
+    }
   }
 
   componentDidMount() {
@@ -92,8 +84,6 @@ export class Reacteroids extends Component {
     const context = this.refs.canvas.getContext('2d');
     this.setState({ context: context });
 
-    this.startGame();
-    //this.gameOver();
     requestAnimationFrame(() => {this.update()});
   }
 
@@ -107,9 +97,6 @@ export class Reacteroids extends Component {
     const context = this.state.context;
     const keys = this.state.keys;
     const ship = this.ship[0];
-    if (this.ship.length > 0) {
-      console.log(this.ship.length, "ships",this.ship);
-    }
 
     context.save();
     context.scale(this.state.screen.ratio, this.state.screen.ratio);
@@ -143,8 +130,6 @@ export class Reacteroids extends Component {
 
     context.restore();
 
-    // Next frame
-    console.log("ships being drawn", this.ship.length);
     requestAnimationFrame(() => {this.update()});
   }
 
@@ -161,7 +146,7 @@ export class Reacteroids extends Component {
       inGame: true,
       currentScore: 0,
     });
-/*
+
     client.joinOrCreate(GAME_ROOM, {}, GameState).then(room => {
       console.log(room.sessionId, "joined", room.name, room.state);
       this.room = room;
@@ -177,7 +162,7 @@ export class Reacteroids extends Component {
         console.log("JOIN ERROR", e);
         return null;
     });
-*/
+
     // Make ship
     let ship = new PlayerShip({
       position: {
@@ -197,10 +182,11 @@ export class Reacteroids extends Component {
       inGame: false,
     });
 
-    // clean up game objects
-    this.room.send("hit",["ship", a, item1.position.x, item1.position.y]);
-//    this.room.leave();
-    this['ship'].slice(0, 1);
+    // clean up game objects, player is always index 0
+    console.log("leaving game");
+    this.room.send("hit",["ship", 0, this.ship[0].position.x, this.ship[0].position.y]);
+    this.room.leave(true);
+    this['ship'].delete = true;
 
     // Replace top score
     if(this.state.currentScore > this.state.topScore){

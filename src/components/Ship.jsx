@@ -4,7 +4,7 @@ import { rotatePoint, randomNumBetween } from '../utils/functions';
 
 export class Ship {
   constructor(args) {
-    console.log("construct npc ship");
+//    console.log("construct npc ship");
     this.position = args.position;
     this.rotation = args.rotation;
     this.create = args.create;
@@ -35,7 +35,7 @@ export class Ship {
   }
 
   render(state){
-    console.log("rendering npc ship");
+//    console.log("rendering npc ship");
     this.draw_ship(state, '#dddddd');
   }
 
