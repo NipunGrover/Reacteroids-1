@@ -75,7 +75,6 @@ export class PlayerShip extends Ship {
     this.inertia = 1;
     this.lastShot = 0;
     this.onDie = args.onDie;
-    this.delete = false;
   }
 
   destroy(){

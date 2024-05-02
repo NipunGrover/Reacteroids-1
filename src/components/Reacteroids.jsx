@@ -21,7 +21,15 @@ const KEY = {
   ESCAPE: 27
 };
 
+/********************************************************************
+ * Reacteroids - main game logic
+ */
 export class Reacteroids extends Component {
+
+  /******************************************************************
+   * Constructor
+   * sets state based on game window and hardcoded starting values
+   */
   constructor() {
     super();
 
@@ -52,6 +60,10 @@ export class Reacteroids extends Component {
     this.particles = [];
   }
 
+  /*****************************************************************
+   * handleResize
+   * adjusts screen when resizing, some jank when working on my laptop
+   */
   handleResize(value, e){
     this.setState({
       screen : {
@@ -62,6 +74,11 @@ export class Reacteroids extends Component {
     });
   }
 
+  /********************************************************************
+   * handleKeys
+   * tracks value 'true' for keyDown and 'false' for keyUp
+   * repeats keystroke as long as value is 'true'
+   */
   handleKeys(value, e){
     let keys = this.state.keys;
     if(e.keyCode === KEY.LEFT   || e.keyCode === KEY.A) keys.left  = value;
@@ -78,6 +95,10 @@ export class Reacteroids extends Component {
     }
   }
 
+  /***************************************************************************
+   * componentDidMount
+   * early program lifecycle, sets up listeners and callbacks
+   */
   componentDidMount() {
     window.addEventListener('keyup',   this.handleKeys.bind(this, false));
     window.addEventListener('keydown', this.handleKeys.bind(this, true));
@@ -89,12 +110,23 @@ export class Reacteroids extends Component {
     requestAnimationFrame(() => {this.update()});
   }
 
+  /**************************************************************
+   * componentWillUnmount
+   * handle app cleanpu
+   */
   componentWillUnmount() {
     window.removeEventListener('keyup', this.handleKeys);
     window.removeEventListener('keydown', this.handleKeys);
     window.removeEventListener('resize', this.handleResize);
   }
 
+  /****************************************************************
+   * update
+   * Main game loop: 
+   *  determine if we're still playing
+   *  update game objects' position and live/dead status
+   *  send status messages to server (ship and bullet poitions)
+   */
   async update() {
     const context = this.state.context;
     const keys = this.state.keys;
@@ -142,6 +174,10 @@ export class Reacteroids extends Component {
     requestAnimationFrame(() => {this.update()});
   }
 
+  /*********************************************************
+   * addScore
+   * does what it says, least problematic function
+   */
   addScore(points){
     if(this.state.inGame){
       this.setState({
@@ -150,6 +186,12 @@ export class Reacteroids extends Component {
     }
   }
 
+  /********************************************************************************
+   * startGame
+   * set playing state, multiplayer room connection, set up onStateChange callback
+   *  onStateChange callback sends locations of all asteroids, ships and bullets
+   *  separate update and render for each of those though
+   */
   startGame(){
     this.setState({
       inGame: true,
@@ -207,8 +249,11 @@ export class Reacteroids extends Component {
     }
   }
 
-  // pretty big assumption here that the client and server keep their asteroid arrays in sync
-  // on both sides we splice(index,1) to remove destroyed elements, and push() new ones
+  /**********************************************************************
+   * generateAsteroids
+   * creates new targets from server state data
+   * link callbacks for setting up particles and increasing score
+   */
   generateAsteroids(rocks){
 //    console.log("generate",rocks.length);
     this.asteroids = [];
@@ -224,6 +269,11 @@ export class Reacteroids extends Component {
     }
   }
 
+  /*****************************************************************
+   * generateShips
+   * wipes out ship catalog except for the player's ship
+   * might be better to put player ship in a separate group like with bullets
+   */
   generateShips (ships) {
     // wipe all ships except [0] before generating from server
     this.ship.splice(1, this.ship.length-1);
@@ -240,26 +290,36 @@ export class Reacteroids extends Component {
     }
   }
 
+  /*****************************************************************
+   * generateBullets
+   * this is just for drawing bullets that exist on server side
+   */
   generateBullets (server_bullets) {
     // wipe all bullets
     this.xbullets = [];
     for (let i = 0; i < server_bullets.length; i++) {
-      console.log("background bullet:", server_bullets[i]);
+      //console.log("background bullet:", server_bullets[i]);
       this.xbullets.push (new Bullet(server_bullets[i]));
     }
   }
 
+  // why is this a function?
   createObject(item, group){
     this[group].push(item);
   }
 
-  // needs to be phased out in favour of handling onMessage("destroy", [...])
-  // since all clients need to delete the same objects at the same time
-  updateObjects(items, group){
-    let index = items.length;
-    for (let item of items) {
+  /*********************************************************************************
+   * updateObjects
+   * render (causing status update) or remove game elements passed here
+   */
+  updateObjects(items, group) {
+    // had a bug where items were iterating up and index was iterating down
+    // for player bullets this would result in one delete skipping the rest's renders
+    // console.log("update", group, items.length);
+    for (let index = items.length; index > 0;) {
+    //  console.log(items[index], index);
       index--;
-      if (item.delete) {
+      if (items[index].delete) {
         this[group].splice(index, 1);
       }else{
         items[index].render(this.state);
@@ -267,6 +327,10 @@ export class Reacteroids extends Component {
     }
   }
 
+  /********************************************************************************
+   * checkCollisions
+   * generalized collision algorithm, but only really used for <PlayerBullet, Asteroid>
+   */
   checkCollisions(items1, items2) {
     var a = items1.length - 1;
     var b;
@@ -288,6 +352,10 @@ export class Reacteroids extends Component {
     }
   }
 
+  /*****************************************************************************
+   * checkCollisionsWithShip
+   * specialized logic for <Ship, Asteroid> collisions
+   */
   checkCollisionsWithShip(items1, items2) {
     for(let a = 0; a < items1.length; a++){
       for(let b = 0; b < items2.length; b++){
@@ -304,7 +372,11 @@ export class Reacteroids extends Component {
     }
   }
 
-  // obj2 is always a rock
+  /***********************************************************************************
+   * checkCollision
+   * obj2 is always a rock 
+   * removed sqrt call by comparing squareds distance values
+   */ 
   checkCollision(obj1, obj2){
     if (obj2.radius === INVALID) return false;
 
@@ -321,7 +393,10 @@ export class Reacteroids extends Component {
 
     return (lengthSquared < collisionRadius);
   }
-
+  
+  /**************************************************************************
+   * actually draw HTML and stuff
+   */
   render() {
     let endgame;
     let message;
