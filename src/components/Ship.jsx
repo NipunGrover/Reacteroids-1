@@ -1,4 +1,4 @@
-import Bullet from './Bullet';
+import { PlayerBullet } from './Bullet';
 import Particle from './Particle';
 import { rotatePoint, randomNumBetween } from '../utils/functions';
 
@@ -14,7 +14,7 @@ export class Ship {
   }
 
   // draw the ship
-  draw_ship (state, colour, fill) {
+  drawShip (state, colour, fill) {
     const context = state.context;
     context.save();
     context.translate(this.position.x, this.position.y);
@@ -36,7 +36,7 @@ export class Ship {
 
   render(state){
 //    console.log("rendering npc ship");
-    this.draw_ship(state, '#ff0fff', '#000000');
+    this.drawShip(state, '#ff0fff', '#000000');
   }
 
   explode () {
@@ -127,13 +127,13 @@ export class PlayerShip extends Ship {
       this.rotate('RIGHT');
     }
     if(state.keys.space && Date.now() - this.lastShot > 300){
-      const bullet = new Bullet({ship: this});
+      const bullet = new PlayerBullet({ship: this});
       this.create(bullet, 'bullets');
       this.lastShot = Date.now();
     }
 
     // coloured trail
-    this.draw_ship (state, "#ff0fff", '#000000');
+    this.drawShip (state, "#ff0fff", '#000000');
 
     // Move
     this.position.x += this.velocity.x;
@@ -155,6 +155,6 @@ export class PlayerShip extends Ship {
     if(this.position.y > state.screen.height) this.position.y = 0;
     else if(this.position.y < 0) this.position.y = state.screen.height;
 
-    this.draw_ship(state, '#ffffff', '#000000');
+    this.drawShip(state, '#ffffff', '#000000');
   }
 }

@@ -1,22 +1,58 @@
 import { rotatePoint } from '../utils/functions';
 
-export default class Bullet {
+// used for bullets from other players in server state
+export class Bullet {
   constructor(args) {
-    let posDelta = rotatePoint({x:0, y:-20}, {x:0,y:0}, args.ship.rotation * Math.PI / 180);
+    // take simplified argument for construction
     this.position = {
-      x: args.ship.position.x + posDelta.x,
-      y: args.ship.position.y + posDelta.y
-    };
-    this.rotation = args.ship.rotation;
-    this.velocity = {
-      x:posDelta.x / 2,
-      y:posDelta.y / 2
+      x: args.pos.x,
+      y: args.pos.y
     };
     this.radius = 2;
   }
 
   destroy(){
     this.delete = true;
+  }
+
+  // Draw
+  drawBullet(state, colour) {
+    const context = state.context;
+    context.save();
+    context.translate(this.position.x, this.position.y);
+    context.rotate(this.rotation * Math.PI / 180);
+    context.fillStyle = colour;
+    context.lineWidth = 0,5;
+    context.beginPath();
+    context.arc(0, 0, 2, 0, 2 * Math.PI);
+    context.closePath();
+    context.fill();
+    context.restore();
+  }
+    
+  render(state){
+    // no need to manage position or expiry on this one
+//    console.log("drawing bullet");
+    this.drawBullet(state, '#DDD');
+  }
+}
+
+// additional state and tracking for bullets fired by player
+export class PlayerBullet extends Bullet {
+  constructor(args) {
+    let posDelta = rotatePoint({x:0, y:-20}, {x:0,y:0}, args.ship.rotation * Math.PI / 180);
+
+    // set position on parent object
+    super ({
+      pos: {x: args.ship.position.x + posDelta.x,
+            y: args.ship.position.y + posDelta.y}
+    });
+    this.rotation = args.ship.rotation;
+    this.velocity = {
+      x:posDelta.x / 2,
+      y:posDelta.y / 2
+    };
+    this.radius = 2;
   }
 
   render(state){
@@ -33,16 +69,6 @@ export default class Bullet {
     }
 
     // Draw
-    const context = state.context;
-    context.save();
-    context.translate(this.position.x, this.position.y);
-    context.rotate(this.rotation * Math.PI / 180);
-    context.fillStyle = '#FFF';
-    context.lineWidth = 0,5;
-    context.beginPath();
-    context.arc(0, 0, 2, 0, 2 * Math.PI);
-    context.closePath();
-    context.fill();
-    context.restore();
+    this.drawBullet(state, '#FFF');
   }
 }

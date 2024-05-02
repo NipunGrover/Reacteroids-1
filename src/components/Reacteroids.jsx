@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Ship, PlayerShip } from './Ship';
 import Asteroid from './Asteroid';
+import { Bullet } from './Bullet';
 import { Client, Room } from 'colyseus.js';
 import { GameState, INVALID } from '../../multiplayer/src/rooms/schema/MyRoomState';
 import { sendCoordinates } from '../utils/functions';
@@ -47,6 +48,7 @@ export class Reacteroids extends Component {
     this.ship = []; // ship[0] should be player ship
     this.asteroids = [];
     this.bullets = [];
+    this.xbullets = [];
     this.particles = [];
   }
 
@@ -119,16 +121,15 @@ export class Reacteroids extends Component {
     this.checkCollisionsWithShip(this.ship, this.asteroids);
 
     // Remove or render
-    this.updateObjects(this.particles, 'particles')
-    this.updateObjects(this.asteroids, 'asteroids')
-    this.updateObjects(this.bullets, 'bullets')
-    this.updateObjects(this.ship, 'ship')
+    this.updateObjects(this.particles, 'particles');
+    this.updateObjects(this.asteroids, 'asteroids');
+    this.updateObjects(this.bullets, 'bullets');
+    this.updateObjects(this.xbullets, 'xbullets');
+    this.updateObjects(this.ship, 'ship');
 
     var bulletPositions = [];
-    for (let b of this['bullets']) {
-      if (b.player) {
-        bulletPositions.push({x: b.position.x, y: b.position.y});
-      }
+    for (let b of this.bullets) {
+      bulletPositions.push({x: b.position.x, y: b.position.y});
     }
 
     if (this.room) {
@@ -163,7 +164,8 @@ export class Reacteroids extends Component {
         this.game_state = newState;
         this.generateAsteroids(newState.rocks);
         this.generateShips(newState.ships);
-        console.log("ships to draw:", this.ship.length);
+        this.generateBullets(newState.bullets);
+//        console.log("ships to draw:", this.ship.length);
       });
 
     }).catch(e => {
@@ -194,7 +196,7 @@ export class Reacteroids extends Component {
     console.log("leaving game");
     this.room.send("hit",["ship", 0, this.ship[0].position.x, this.ship[0].position.y]);
     this.room.leave(true);
-    this['ship'].delete = true;
+    this.ship[0].delete = true; // delete player ship
 
     // Replace top score
     if(this.state.currentScore > this.state.topScore){
@@ -208,11 +210,8 @@ export class Reacteroids extends Component {
   // pretty big assumption here that the client and server keep their asteroid arrays in sync
   // on both sides we splice(index,1) to remove destroyed elements, and push() new ones
   generateAsteroids(rocks){
-//    let ship = this.ship[0];
 //    console.log("generate",rocks.length);
-//    let asteroids = this['asteroids'];
     this.asteroids = [];
-//    this['asteroids'].splice(0, this['asteroids'].length);
     
     for (let i = 0; i < rocks.length; i++) {
       let server = rocks[i];
@@ -238,6 +237,15 @@ export class Reacteroids extends Component {
         create: this.createObject.bind(this),
       });
       this.createObject(ship, 'ship');
+    }
+  }
+
+  generateBullets (server_bullets) {
+    // wipe all bullets
+    this.xbullets = [];
+    for (let i = 0; i < server_bullets.length; i++) {
+      console.log("background bullet:", server_bullets[i]);
+      this.xbullets.push (new Bullet(server_bullets[i]));
     }
   }
 

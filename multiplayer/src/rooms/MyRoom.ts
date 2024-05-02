@@ -4,6 +4,8 @@ import { GameState, RockState, COMMON_PIXELS, XY, ShipState, BulletState } from 
 export class MyRoom extends Room<GameState> {
   // remember which client owns which ship
   players: Map<string, number> = new Map<string, number>();
+  activeShots: number = 0;
+  lastShooter: string;
 
   onCreate (options: any) {
     // start a room with asteroids at level 1 (4 asteroids)
@@ -11,7 +13,7 @@ export class MyRoom extends Room<GameState> {
 
     this.onMessage("hit", (client, message) => {
       let [type, index, x, y] = message;
-      console.log("hit", type, index);
+//      console.log("hit", type, index);
       
       if (type == "rock") {
         // destroyRock does a lot of stuff
@@ -45,11 +47,23 @@ export class MyRoom extends Room<GameState> {
     });
 
     this.onMessage("shot", (client, message) => {
-      console.log("shot update", message);
+//      console.log("shot update", this.activeShots, message);
       let positions = message;
+
+      // do we erase player bullets?
+      // 1. if there are more than 3 per player
+      // 2. if it's just one player shooting, replace the whole set every time
+      var overCount = (this.activeShots > (this.clients.length * 3))? true : false;      
+      var onePlayer = (client.id === this.lastShooter);
+
+      if (overCount || onePlayer) {
+        this.state.bullets.splice(0, this.state.bullets.length);
+      }
+
       for (let i = 0; i < positions.length; i++) {
         this.state.bullets.push (new BulletState(new XY(positions[i].x, positions[i].y)));
       }
+      this.activeShots = this.state.bullets.length;
     });
 
     this.onMessage("start", (client, message) => {
@@ -93,13 +107,15 @@ export class MyRoom extends Room<GameState> {
   }
 
   // clean up player leaving: 
-  // 1. their player map entry
-  // 2. their npc ship entry
   onLeave (client: Client, consented: boolean) {
     console.log(client.sessionId, "left!");
+
     if (this.players.has(client.id)) {
+      // 1. their player map entry
       const index = this.players.get(client.id);
       this.players.delete(client.id);
+
+      // 2. their npc ship entry
       if (index < this.state.ships.length) {
         this.state.ships.slice(index, 1);
       }
@@ -132,6 +148,6 @@ export class MyRoom extends Room<GameState> {
 //      this.broadcast("create", ["rock", this.state.rocks]);
     }
     this.state.rocks.splice(index, 1);
-    console.log("state change", this.state.rocks.length);
+//    console.log("state change", this.state.rocks.length);
   }
 }
