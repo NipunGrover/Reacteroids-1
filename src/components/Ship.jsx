@@ -186,23 +186,14 @@ export default class Ship {
   
        // fighter body
        context.beginPath();
-       context.arc(0, 20, 15, 0, 2 * Math.PI);
-       context.fillStyle = 'grey';
-       context.fill();
-       context.lineWidth = 2;
-       context.strokeStyle = color;
-       context.stroke();
-  
-       // fighter wings left
-       context.beginPath();
        context.moveTo(-15, 15);
-       context.lineTo(-20, 15);
-       context.lineTo(-20, -40);
-       context.lineTo(-40, 15);
-       context.lineTo(-40, 40);
-       context.lineTo(-20, 55);
-       context.lineTo(-20, 25);
-       context.lineTo(-15, 25);
+       context.lineTo(-12, 10);
+       context.lineTo(-2, -40);
+       context.lineTo(2, -40);
+       context.lineTo(12, 10);
+       context.lineTo(15, 15);
+       context.lineTo(15, 35);
+       context.quadraticCurveTo(0, 45, -15, 35);
        context.closePath();
        context.fillStyle = 'black';
        context.fill();
@@ -210,22 +201,34 @@ export default class Ship {
        context.strokeStyle = color;
        context.stroke();
 
-       // fighter wings right
+      // left wing
        context.beginPath();
-       context.moveTo(15, 15);
-       context.lineTo(20, 15);
-       context.lineTo(20, -40);
-       context.lineTo(40, 15);
-       context.lineTo(40, 40);
-       context.lineTo(20, 55);
-       context.lineTo(20, 25);
-       context.lineTo(15, 25);
+       context.moveTo(-15, 15);
+       context.lineTo(-50, 15);
+       context.lineTo(-50, -20);
+       context.lineTo(-50, 25);
+       context.lineTo(-15, 35);
        context.closePath();
-       context.fillStyle = 'black';
+       context.fillStyle = 'purple';
        context.fill();
        context.lineWidth = 2;
        context.strokeStyle = color;
        context.stroke();
+      
+       // right wing
+       context.beginPath();
+       context.moveTo(15, 15);
+       context.lineTo(50, 15);
+       context.lineTo(50, -20);
+       context.lineTo(50, 25);
+       context.lineTo(15, 35);
+       context.closePath();
+       context.fillStyle = 'purple';
+       context.fill();
+       context.lineWidth = 2;
+       context.strokeStyle = color;
+       context.stroke();
+
        context.restore();
     }
   
@@ -256,7 +259,7 @@ export default class Ship {
       this.lastShot = Date.now();
     }
 
-    this.draw_tie_fighter(state, '#ff0096');
+    this.draw_x_wing(state, '#ff0096');
 
     // Move
     this.position.x += this.velocity.x;
@@ -278,6 +281,6 @@ export default class Ship {
     if(this.position.y > state.screen.height) this.position.y = 0;
     else if(this.position.y < 0) this.position.y = state.screen.height;
 
-    this.draw_tie_fighter(state, '#FFF');
+    this.draw_x_wing(state, '#FFF');
   }
 }
