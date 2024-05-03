@@ -126,7 +126,10 @@ export class GameState extends Schema {
     this.level = level;
     this.rocks = new ArraySchema<RockState>(...(new Array<RockState>));
     this.players = new ArraySchema<PlayerState>(...(new Array<PlayerState>));
+    this.newRocks();
+  }
 
+  newRocks () {
     for (let i = 0; i < this.level+2; i++) {
       this.rocks.push (new RockState(
         randomCoord(), randomCoord(), RockState.MAX_SIZE, this.level
