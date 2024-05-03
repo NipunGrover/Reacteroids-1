@@ -35,7 +35,7 @@ export class Bullet {
   render(state){
     // no need to manage position or expiry on this one
 //    console.log("drawing bullet");
-    this.drawBullet(state, '#DDD');
+    this.drawBullet(state, '#D0D');
   }
 }
 

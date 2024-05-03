@@ -55,7 +55,8 @@ export class Reacteroids extends Component {
       topScore: localStorage['topscore'] || 0,
       inGame: false
     }
-    this.ship = []; // ship[0] should be player ship
+    this.ship = [];
+    this.xships = [];
     this.asteroids = [];
     this.bullets = [];
     this.xbullets = [];
@@ -158,8 +159,10 @@ export class Reacteroids extends Component {
     // Remove or render
     this.updateObjects(this.particles, 'particles');
     this.updateObjects(this.asteroids, 'asteroids');
-    this.updateObjects(this.bullets, 'bullets');
+    //console.log("external bullets", this.xbullets.length);
     this.updateObjects(this.xbullets, 'xbullets');
+    this.updateObjects(this.xships, 'xships');
+    this.updateObjects(this.bullets, 'bullets');
     this.updateObjects(this.ship, 'ship');
 
     var bulletPositions = [];
@@ -169,10 +172,10 @@ export class Reacteroids extends Component {
       bulletPositions.push({x: serverX, y: serverY});
     }
 
-    if (this.room) {
+    if (this.room && ship) {
       const serverX = sendCoordinates(ship.position.x, window.innerWidth);
       const serverY = sendCoordinates(ship.position.y, window.innerHeight);
-      if (ship) { this.room.send("ship", [serverX, serverY, ship.rotation]); }
+      this.room.send("ship", [serverX, serverY, ship.rotation]);
       if (bulletPositions.length > 0) { this.room.send("shot", bulletPositions); }
     }
 
@@ -212,8 +215,8 @@ export class Reacteroids extends Component {
 //        console.log("state updated!");
         this.game_state = newState;
         this.generateAsteroids(newState.rocks);
-        this.generateShips(newState.ships);
-        this.generateBullets(newState.bullets);
+        this.generateShips(newState.players);
+        this.generateBullets(newState.players);
 //        console.log("ships to draw:", this.ship.length);
       });
 
@@ -240,11 +243,13 @@ export class Reacteroids extends Component {
 
     // clean up game objects, player is always index 0
     console.log("leaving game");
-    const serverX = sendCoordinates(this.ship[0].position.x, window.innerWidth);
-    const serverY = sendCoordinates(this.ship[0].position.y, window.innerHeight);
-    this.room.send("hit",["ship", 0, serverX, serverY]);
+    if (this.ship.length) {
+      const serverX = sendCoordinates(this.ship[0].position.x, window.innerWidth);
+      const serverY = sendCoordinates(this.ship[0].position.y, window.innerHeight);
+      this.room.send("hit",["ship", 0, serverX, serverY]);
+      this.ship[0].delete = true; // delete player ship
+    }
     this.room.leave(true);
-    this.ship[0].delete = true; // delete player ship
 
     // Replace top score
     if(this.state.currentScore > this.state.topScore){
@@ -280,19 +285,21 @@ export class Reacteroids extends Component {
    * wipes out ship catalog except for the player's ship
    * might be better to put player ship in a separate group like with bullets
    */
-  generateShips (ships) {
-    // wipe all ships except [0] before generating from server
-    this.ship.splice(1, this.ship.length-1);
-    for (let i = 0; i < ships.length; i++) {
-      let ship = new Ship({
-        position: {
-          x: ships[i].pos.x,
-          y: ships[i].pos.y
-        },
-        rotation: ships[i].rtn,
-        create: this.createObject.bind(this),
-      });
-      this.createObject(ship, 'ship');
+  generateShips (players) {
+    // wipe all ghosts
+    this.xships.splice(0, this.xships.length);
+    for (let i = 0; i < players.length; i++) {
+      if (players[i].id != this.room.sessionId) {
+        let ship = new Ship({
+          position: {
+            x: players[i].ship.pos.x,
+            y: players[i].ship.pos.y
+          },
+          rotation: players[i].ship.rtn,
+          create: this.createObject.bind(this), // for creating particles
+        });
+        this.createObject(ship, 'xships');
+      }
     }
   }
 
@@ -300,12 +307,15 @@ export class Reacteroids extends Component {
    * generateBullets
    * this is just for drawing bullets that exist on server side
    */
-  generateBullets (server_bullets) {
+  generateBullets (players) {
     // wipe all bullets
     this.xbullets = [];
-    for (let i = 0; i < server_bullets.length; i++) {
-      //console.log("background bullet:", server_bullets[i]);
-      this.xbullets.push (new Bullet(server_bullets[i]));
+    for (let i = 0; i < players.length; i++) {
+      if (players[i].id != this.room.sessionId) {
+        for (let j = 0; j < players[i].bullets.length; j++) {
+          this.createObject (new Bullet(players[i].bullets[j]), 'xbullets');
+        }
+      }
     }
   }
 

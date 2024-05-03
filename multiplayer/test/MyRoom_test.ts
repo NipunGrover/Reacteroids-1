@@ -30,7 +30,7 @@ describe("testing your Colyseus app", () => {
     const x: number = client1.state.rocks[l-1].position.x;
     const dx: number = client1.state.rocks[l-1].speed.x;
 
-    assert.strictEqual(4, l);
+    assert.strictEqual(3, l);
     console.log(client1.state.rocks[0]);
     assert.notStrictEqual(INVALID, client1.state.rocks[l-1].position.x);
     assert.notStrictEqual(INVALID, client1.state.rocks[l-1].speed.y);
@@ -41,8 +41,8 @@ describe("testing your Colyseus app", () => {
 
     await room.waitForNextPatch();
 
-    const s = room.state.ships.length;
-    assert.strictEqual(s, 1);
-    assert.strictEqual(room.state.ships[s-1].pos.x, 100);
+    const p = room.state.players.length;
+    assert.strictEqual(p, 1);
+    assert.strictEqual(room.state.players[p-1].ship.pos.x, 100);
   });
 });

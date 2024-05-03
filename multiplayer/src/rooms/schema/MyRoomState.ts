@@ -74,6 +74,21 @@ export class ShipState extends Schema {
   }
 }
 
+export class PlayerState extends Schema {
+  // the most important thing is we group a player's info with their client.id
+  // that way we don't need to re-render the ship and bullets from the server that belong to a player
+  // and we can manage each player's bullet set separately instead of throwing them all in one array
+  @type('string') id: string;
+  @type(ShipState) ship: ShipState;
+  @type([BulletState]) bullets: BulletState[];
+
+  constructor (idValue: string) {
+    super ();
+    this.id = idValue;
+    this.bullets = new ArraySchema<BulletState>(...(new Array<BulletState>));
+  }
+}
+
 // This state represents all of the rocks in the level
 // It uses arrays internally for size, position, and velocity of each
 export class RockState extends Schema {
@@ -102,17 +117,15 @@ export class RockState extends Schema {
 }
 
 export class GameState extends Schema {
-  @type([ShipState]) ships: ShipState[];
+  @type([PlayerState]) players: PlayerState[];
   @type([RockState]) rocks: RockState[];
-  @type([BulletState]) bullets: BulletState[];
   @type("number") level: number = 1;
 
   constructor(level: number = 1) {
     super();
     this.level = level;
     this.rocks = new ArraySchema<RockState>(...(new Array<RockState>));
-    this.ships = new ArraySchema<ShipState>(...(new Array<ShipState>));
-    this.bullets = new ArraySchema<BulletState>(...(new Array<BulletState>));
+    this.players = new ArraySchema<PlayerState>(...(new Array<PlayerState>));
 
     for (let i = 0; i < this.level+2; i++) {
       this.rocks.push (new RockState(

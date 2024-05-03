@@ -1,11 +1,16 @@
 import { Room, Client } from "@colyseus/core";
-import { GameState, RockState, COMMON_PIXELS, XY, ShipState, BulletState } from "./schema/MyRoomState";
+import { GameState, 
+         RockState, 
+         PlayerState, 
+         ShipState, 
+         BulletState, 
+         COMMON_PIXELS, 
+         XY
+        } from "./schema/MyRoomState";
 
 export class MyRoom extends Room<GameState> {
   // remember which client owns which ship
   players: Map<string, number> = new Map<string, number>();
-  activeShots: number = 0;
-  lastShooter: string;
 
   onCreate (options: any) {
     // start a room with asteroids at level 1 (4 asteroids)
@@ -19,9 +24,11 @@ export class MyRoom extends Room<GameState> {
         // destroyRock does a lot of stuff
         this.destroyRock (index, x, y);
       } else if (type == "ship") {
-        // wipe out the ship data since it will regenerate within one frame
-        this.players.clear();
-        this.state.ships.splice(0, this.state.ships.length);
+        // erase data for eliminated player
+        if (this.players.has(client.id)) {
+          let index = this.players.get(client.id);
+          this.state.players.splice(index, 1);
+        }
       }
     });
 
@@ -30,40 +37,38 @@ export class MyRoom extends Room<GameState> {
 //      console.log("tracking",this.state.ships.length,"for",this.players.size,"players");
       if (this.players.has(client.id)) {
         const index = this.players.get(client.id);
-        if (index < this.state.ships.length) {
+        if (index < this.state.players.length) {
           //console.log("update values for", index);
-          this.state.ships[index].pos = new XY(x, y);
-          this.state.ships[index].rtn = r;
+          this.state.players[index].ship.pos = new XY(x, y);
+          this.state.players[index].ship.rtn = r;
         } else {
           // sometimes the index gets messed up?
           // choose nuclear option against the player index
           this.players.delete(client.id);
         }
       } else {
-        //console.log("push values", x, y, r);
-        this.state.ships.push (new ShipState(new XY(x, y), r));
-        this.players.set(client.id, this.state.ships.length-1);
+        //create state for new player and map the array to their id value
+        //then create their ship in the PlayerState object
+        this.state.players.push (new PlayerState(client.id));
+        let index = this.state.players.length-1;
+        this.players.set(client.id, index);
+        this.state.players[index].ship = new ShipState(new XY(x, y), r);
       }
     });
 
     this.onMessage("shot", (client, message) => {
 //      console.log("shot update", this.activeShots, message);
-      let positions = message;
+      if (this.players.has(client.id)) {
+        let index = this.players.get(client.id);
+        let positions = message;
+        let bullets = this.state.players[index].bullets;
 
-      // do we erase player bullets?
-      // 1. if there are more than 3 per player
-      // 2. if it's just one player shooting, replace the whole set every time
-      var overCount = (this.activeShots > (this.clients.length * 3))? true : false;      
-      var onePlayer = (client.id === this.lastShooter);
-
-      if (overCount || onePlayer) {
-        this.state.bullets.splice(0, this.state.bullets.length);
+        // erase all bullets from this player and replace with new positions
+        bullets.splice(0, bullets.length);
+        for (let i = 0; i < positions.length; i++) {
+          bullets.push (new BulletState(new XY(positions[i].x, positions[i].y)));
+        }
       }
-
-      for (let i = 0; i < positions.length; i++) {
-        this.state.bullets.push (new BulletState(new XY(positions[i].x, positions[i].y)));
-      }
-      this.activeShots = this.state.bullets.length;
     });
 
     this.onMessage("start", (client, message) => {
@@ -113,14 +118,16 @@ export class MyRoom extends Room<GameState> {
   onLeave (client: Client, consented: boolean) {
     console.log(client.sessionId, "left!");
 
+    // same as code from onMessage("hit" ...) 
+    // we need to be careful to avoid a null ref
     if (this.players.has(client.id)) {
       // 1. their player map entry
       const index = this.players.get(client.id);
       this.players.delete(client.id);
 
       // 2. their npc ship entry
-      if (index < this.state.ships.length) {
-        this.state.ships.slice(index, 1);
+      if (index < this.state.players.length) {
+        this.state.players.slice(index, 1);
       }
     }
   }
