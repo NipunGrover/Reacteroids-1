@@ -10,6 +10,8 @@ const COLYSEUS_HOST = 'ws://localhost:3333';
 const GAME_ROOM = 'my_room';
 const client = new Client (COLYSEUS_HOST);
 
+const MAGIC_START_COORDINATE = {x: 512, y: 512}; // this is half of the server's 1024x1024 game board
+
 const KEY = {
   LEFT:  37,
   RIGHT: 39,
@@ -162,11 +164,15 @@ export class Reacteroids extends Component {
 
     var bulletPositions = [];
     for (let b of this.bullets) {
-      bulletPositions.push({x: b.position.x, y: b.position.y});
+      const serverX = sendCoordinates(b.position.x, window.innerWidth);
+      const serverY = sendCoordinates(b.position.y, window.innerHeight);
+      bulletPositions.push({x: serverX, y: serverY});
     }
 
     if (this.room) {
-      if (ship) { this.room.send("ship", [ship.position.x, ship.position.y, ship.rotation]); }
+      const serverX = sendCoordinates(ship.position.x, window.innerWidth);
+      const serverY = sendCoordinates(ship.position.y, window.innerHeight);
+      if (ship) { this.room.send("ship", [serverX, serverY, ship.rotation]); }
       if (bulletPositions.length > 0) { this.room.send("shot", bulletPositions); }
     }
 
@@ -218,10 +224,7 @@ export class Reacteroids extends Component {
 
     // Make ship
     let ship = new PlayerShip({
-      position: {
-        x: this.state.screen.width/2,
-        y: this.state.screen.height/2
-      },
+      position: MAGIC_START_COORDINATE,
       rotation: 0,
       create: this.createObject.bind(this),
       onDie: this.gameOver.bind(this)
@@ -237,7 +240,9 @@ export class Reacteroids extends Component {
 
     // clean up game objects, player is always index 0
     console.log("leaving game");
-    this.room.send("hit",["ship", 0, this.ship[0].position.x, this.ship[0].position.y]);
+    const serverX = sendCoordinates(this.ship[0].position.x, window.innerWidth);
+    const serverY = sendCoordinates(this.ship[0].position.y, window.innerHeight);
+    this.room.send("hit",["ship", 0, serverX, serverY]);
     this.room.leave(true);
     this.ship[0].delete = true; // delete player ship
 

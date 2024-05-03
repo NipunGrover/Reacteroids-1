@@ -1,11 +1,14 @@
 import { PlayerBullet } from './Bullet';
 import Particle from './Particle';
-import { rotatePoint, randomNumBetween } from '../utils/functions';
+import { rotatePoint, randomNumBetween, getCoordinates } from '../utils/functions';
 
 export class Ship {
   constructor(args) {
 //    console.log("construct npc ship");
-    this.position = args.position;
+    this.position = { 
+      x: getCoordinates(args.position.x, window.innerWidth),
+      y: getCoordinates(args.position.y, window.innerHeight)
+    };
     this.rotation = args.rotation;
     this.create = args.create;
 

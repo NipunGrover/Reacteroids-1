@@ -1,13 +1,15 @@
-import { rotatePoint } from '../utils/functions';
+import { rotatePoint, getCoordinates } from '../utils/functions';
 
 // used for bullets from other players in server state
 export class Bullet {
   constructor(args) {
     // take simplified argument for construction
-    this.position = {
-      x: args.pos.x,
-      y: args.pos.y
-    };
+    if (args.pos) {
+      this.position = {
+        x: getCoordinates(args.pos.x, window.innerWidth),
+        y: getCoordinates(args.pos.y, window.innerHeight)
+      };
+    }
     this.radius = 2;
   }
 
@@ -44,9 +46,11 @@ export class PlayerBullet extends Bullet {
 
     // set position on parent object
     super ({
-      pos: {x: args.ship.position.x + posDelta.x,
-            y: args.ship.position.y + posDelta.y}
+      // empty
     });
+    this.position = {
+      x: args.ship.position.x + posDelta.x,
+      y: args.ship.position.y + posDelta.y}
     this.rotation = args.ship.rotation;
     this.velocity = {
       x:posDelta.x / 2,
