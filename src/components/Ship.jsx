@@ -175,6 +175,62 @@ export default class Ship {
        context.restore();
     }
 
+    draw_x_wing(state, color){   
+      const context = state.context;
+      context.save();
+      context.translate(this.position.x, this.position.y);
+      context.rotate(this.rotation * Math.PI / 180);
+      context.strokeStyle = color;
+      context.fillStyle = '#AA336A';
+      context.lineWidth = 2;
+  
+       // fighter body
+       context.beginPath();
+       context.arc(0, 20, 15, 0, 2 * Math.PI);
+       context.fillStyle = 'grey';
+       context.fill();
+       context.lineWidth = 2;
+       context.strokeStyle = color;
+       context.stroke();
+  
+       // fighter wings left
+       context.beginPath();
+       context.moveTo(-15, 15);
+       context.lineTo(-20, 15);
+       context.lineTo(-20, -40);
+       context.lineTo(-40, 15);
+       context.lineTo(-40, 40);
+       context.lineTo(-20, 55);
+       context.lineTo(-20, 25);
+       context.lineTo(-15, 25);
+       context.closePath();
+       context.fillStyle = 'black';
+       context.fill();
+       context.lineWidth = 2;
+       context.strokeStyle = color;
+       context.stroke();
+
+       // fighter wings right
+       context.beginPath();
+       context.moveTo(15, 15);
+       context.lineTo(20, 15);
+       context.lineTo(20, -40);
+       context.lineTo(40, 15);
+       context.lineTo(40, 40);
+       context.lineTo(20, 55);
+       context.lineTo(20, 25);
+       context.lineTo(15, 25);
+       context.closePath();
+       context.fillStyle = 'black';
+       context.fill();
+       context.lineWidth = 2;
+       context.strokeStyle = color;
+       context.stroke();
+       context.restore();
+    }
+  
+    
+
   render(state){
     // Controls
     if(state.keys.up){
