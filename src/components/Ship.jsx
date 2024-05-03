@@ -2,6 +2,7 @@ import Bullet from './Bullet';
 import Particle from './Particle';
 import { rotatePoint, randomNumBetween } from '../utils/functions';
 import SuperBullet from './SuperBullet';
+import tie_sound from '../assets/sounds/tie_fighter.mp3'
 
 export default class Ship {
     
@@ -20,6 +21,7 @@ export default class Ship {
     this.lastShot = 0;
     this.create = args.create;
     this.onDie = args.onDie;
+    this.bsound = new Audio(tie_sound);
   }
 
   destroy(){
@@ -118,6 +120,61 @@ export default class Ship {
      context.restore();
   }
 
+    // A function to draw a tie fighter
+    draw_tie_fighter(state, color){   
+      const context = state.context;
+      context.save();
+      context.translate(this.position.x, this.position.y);
+      context.rotate(this.rotation * Math.PI / 180);
+      context.strokeStyle = color;
+      context.fillStyle = '#AA336A';
+      context.lineWidth = 2;
+  
+       // fighter body
+       context.beginPath();
+       context.arc(0, 20, 15, 0, 2 * Math.PI);
+       context.fillStyle = 'grey';
+       context.fill();
+       context.lineWidth = 2;
+       context.strokeStyle = color;
+       context.stroke();
+  
+       // fighter wings left
+       context.beginPath();
+       context.moveTo(-15, 15);
+       context.lineTo(-20, 15);
+       context.lineTo(-20, -40);
+       context.lineTo(-40, 15);
+       context.lineTo(-40, 40);
+       context.lineTo(-20, 55);
+       context.lineTo(-20, 25);
+       context.lineTo(-15, 25);
+       context.closePath();
+       context.fillStyle = 'black';
+       context.fill();
+       context.lineWidth = 2;
+       context.strokeStyle = color;
+       context.stroke();
+
+       // fighter wings right
+       context.beginPath();
+       context.moveTo(15, 15);
+       context.lineTo(20, 15);
+       context.lineTo(20, -40);
+       context.lineTo(40, 15);
+       context.lineTo(40, 40);
+       context.lineTo(20, 55);
+       context.lineTo(20, 25);
+       context.lineTo(15, 25);
+       context.closePath();
+       context.fillStyle = 'black';
+       context.fill();
+       context.lineWidth = 2;
+       context.strokeStyle = color;
+       context.stroke();
+       context.restore();
+    }
+
   render(state){
     // Controls
     if(state.keys.up){
@@ -131,6 +188,9 @@ export default class Ship {
     }
     if(state.keys.space && !state.pinkState && Date.now() - this.lastShot > 300){
       const bullet = new Bullet({ship: this});
+      this.bsound.pause();
+      this.bsound.currentTime = 0;
+      this.bsound.play();
       this.create(bullet, 'bullets');
       this.lastShot = Date.now();
     }
@@ -140,7 +200,7 @@ export default class Ship {
       this.lastShot = Date.now();
     }
 
-    this.draw_ship(state, '#ff0096');
+    this.draw_tie_fighter(state, '#ff0096');
 
     // Move
     this.position.x += this.velocity.x;
@@ -162,6 +222,6 @@ export default class Ship {
     if(this.position.y > state.screen.height) this.position.y = 0;
     else if(this.position.y < 0) this.position.y = state.screen.height;
 
-    this.draw_ship(state, '#FFF');
+    this.draw_tie_fighter(state, '#FFF');
   }
 }
