@@ -93,17 +93,11 @@ export class RockState extends Schema {
   constructor(x: number, y: number, size: number, level: number) {
     super();
     this.position = new XY(x, y);
-    this.speed = new XY(randomSpeed(RockState.MAX_V + level), randomSpeed(RockState.MAX_V + level));
+    this.speed = new XY(randomSpeed(RockState.MAX_V + level/10), randomSpeed(RockState.MAX_V + level/10));
     this.radius = size;
     this.spin = Math.random()*2 -1; //-1 to +1
     this.vertices = asteroidVerticesXY(8, this.radius);
     this.rotation = 0;
-    // do we need these here? there's gotta be a better way
-    /*
-    this.score = (80/this.radius)*5;
-    this.create = args.create;
-    this.addScore = args.addScore;
-    */
   }
 }
 

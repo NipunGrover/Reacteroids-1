@@ -83,7 +83,10 @@ export class MyRoom extends Room<GameState> {
 
   // update asteroid positions
   moveRocks(deltaTime: number) {
-    for (let i = 0; i < this.state.rocks.length; i++) {
+    if (this.state.rocks.length === 0) {
+      const lvl = this.state.level;
+      this.setState(new GameState(lvl+1));
+    } else for (let i = 0; i < this.state.rocks.length; i++) {
       let r: RockState = this.state.rocks[i];
       //console.log("updating:", i);
         // should multiply dx/dy by deltaTime

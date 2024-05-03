@@ -6,7 +6,7 @@ import { Client, Room } from 'colyseus.js';
 import { GameState, INVALID } from '../../multiplayer/src/rooms/schema/MyRoomState';
 import { sendCoordinates } from '../utils/functions';
 
-const COLYSEUS_HOST = 'ws://10.144.18.24:2567';
+const COLYSEUS_HOST = 'ws://localhost:3333';
 const GAME_ROOM = 'my_room';
 const client = new Client (COLYSEUS_HOST);
 
@@ -100,6 +100,7 @@ export class Reacteroids extends Component {
    * early program lifecycle, sets up listeners and callbacks
    */
   componentDidMount() {
+    window.process = { ...window.process };
     window.addEventListener('keyup',   this.handleKeys.bind(this, false));
     window.addEventListener('keydown', this.handleKeys.bind(this, true));
     window.addEventListener('resize',  this.handleResize.bind(this, false));
