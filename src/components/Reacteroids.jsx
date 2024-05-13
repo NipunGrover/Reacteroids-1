@@ -10,6 +10,10 @@ import {
   INVALID,
 } from "../../multiplayer/src/rooms/schema/MyRoomState";
 
+const COLYSEUS_HOST = "ws://localhost:3333";
+const GAME_ROOM = "my_room";
+const client = new Client(COLYSEUS_HOST);
+
 const KEY = {
   LEFT: 37,
   RIGHT: 39,
@@ -142,6 +146,20 @@ export class Reacteroids extends Component {
       currentScore: 0,
     });
 
+    client
+      .joinOrCreate(GAME_ROOM, {}, GameState)
+      .then((room) => {
+        this.room = room;
+        this.room.onStateChange((newState) => {
+          this.game_state = newState;
+          this.generateAsteroids(newState.level + 3);
+        });
+      })
+      .catch((e) => {
+        console.log("Join Error: ", e);
+        return null;
+      });
+
     // Make ship
     let ship = new Ship({
       position: {
@@ -155,7 +173,7 @@ export class Reacteroids extends Component {
 
     // Make asteroids
     this.asteroids = [];
-    this.generateAsteroids(this.state.asteroidCount);
+    //this.generateAsteroids(this.state.asteroidCount);
   }
 
   gameOver() {
