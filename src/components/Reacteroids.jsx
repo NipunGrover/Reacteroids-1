@@ -3,12 +3,12 @@ import Ship from "./Ship";
 import Asteroid from "./Asteroid";
 import { randomNumBetweenExcluding } from "../utils/functions";
 import { Client, Room } from "colyseus.js";
-import {
-  GameState,
-  RockState,
-  COMMON_PIXELS,
-  INVALID,
-} from "../../multiplayer/src/rooms/schema/MyRoomState";
+// import {
+//   GameState,
+//   RockState,
+//   COMMON_PIXELS,
+//   INVALID,
+// } from "../../multiplayer/src/rooms/schema/MyRoomState";
 
 const COLYSEUS_HOST = "ws://localhost:3333";
 const GAME_ROOM = "my_room";
@@ -147,12 +147,15 @@ export class Reacteroids extends Component {
     });
 
     client
-      .joinOrCreate(GAME_ROOM, {}, GameState)
+      .joinOrCreate(GAME_ROOM, {})
       .then((room) => {
+        console.log(room.sessionId, "joined", room.name);
+
         this.room = room;
         this.room.onStateChange((newState) => {
-          this.game_state = newState;
-          this.generateAsteroids(newState.level + 3);
+          //  this.game_state = newState;
+          //  this.generateAsteroids(newState.level + 3);
+          console.log(room.name, "has new state:", state);
         });
       })
       .catch((e) => {
