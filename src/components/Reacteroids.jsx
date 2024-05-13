@@ -3,14 +3,8 @@ import Ship from "./Ship";
 import Asteroid from "./Asteroid";
 import { randomNumBetweenExcluding } from "../utils/functions";
 import { Client, Room } from "colyseus.js";
-// import {
-//   GameState,
-//   RockState,
-//   COMMON_PIXELS,
-//   INVALID,
-// } from "../../multiplayer/src/rooms/schema/MyRoomState";
 
-const COLYSEUS_HOST = "ws://localhost:3333";
+const COLYSEUS_HOST = "ws://localhost:2567";
 const GAME_ROOM = "my_room";
 const client = new Client(COLYSEUS_HOST);
 
@@ -28,6 +22,24 @@ export class Reacteroids extends Component {
   constructor() {
     super();
 
+    client
+      .joinOrCreate(GAME_ROOM, {})
+      .then((room) => {
+        console.log(room.sessionId, "joined", room.name);
+        this.room = room;
+        this.room.onStateChange((newState) => {
+          this.game_state = newState;
+          //  this.generateAsteroids(newState.level + 3);
+          console.log(room.name, "has new state:", newState);
+        });
+        this.room.onMessage("message_type", (message) => {
+          console.log(room.sessionId, "received on", room.name, message);
+        });
+      })
+      .catch((e) => {
+        console.log("Join Error: ", e);
+        return null;
+      });
     this.state = {
       screen: {
         width: window.innerWidth,
@@ -145,23 +157,6 @@ export class Reacteroids extends Component {
       inGame: true,
       currentScore: 0,
     });
-
-    client
-      .joinOrCreate(GAME_ROOM, {})
-      .then((room) => {
-        console.log(room.sessionId, "joined", room.name);
-
-        this.room = room;
-        this.room.onStateChange((newState) => {
-          //  this.game_state = newState;
-          //  this.generateAsteroids(newState.level + 3);
-          console.log(room.name, "has new state:", state);
-        });
-      })
-      .catch((e) => {
-        console.log("Join Error: ", e);
-        return null;
-      });
 
     // Make ship
     let ship = new Ship({
