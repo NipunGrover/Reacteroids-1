@@ -188,6 +188,13 @@ export class Reacteroids extends Component {
     }
   }
 
+  generateShips(ships) {
+    //Delete all but the first ship
+    this.ship.splice(1, this.ship.length - 1);
+
+    for (let i = 0; i < ships; i++) {}
+  }
+
   generateAsteroids(howMany) {
     let asteroids = [];
     let ship = this.ship[0];
