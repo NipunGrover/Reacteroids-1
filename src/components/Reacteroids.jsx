@@ -1,8 +1,9 @@
 import React, { Component } from "react";
-import Ship from "./Ship";
+import { Ship, PlayerShip } from "./Ship";
 import Asteroid from "./Asteroid";
-import { randomNumBetweenExcluding } from "../utils/functions";
+import { randomNumBetweenExcluding, sendCoordinates } from "../utils/functions";
 import { Client, Room } from "colyseus.js";
+import { GameState } from "../../multiplayer/src/rooms/schema/MyRoomState";
 
 const COLYSEUS_HOST = "ws://localhost:2567";
 const GAME_ROOM = "my_room";
@@ -22,24 +23,6 @@ export class Reacteroids extends Component {
   constructor() {
     super();
 
-    client
-      .joinOrCreate(GAME_ROOM, {})
-      .then((room) => {
-        console.log(room.sessionId, "joined", room.name);
-        this.room = room;
-        this.room.onStateChange((newState) => {
-          this.game_state = newState;
-          //  this.generateAsteroids(newState.level + 3);
-          console.log(room.name, "has new state:", newState);
-        });
-        this.room.onMessage("message_type", (message) => {
-          console.log(room.sessionId, "received on", room.name, message);
-        });
-      })
-      .catch((e) => {
-        console.log("Join Error: ", e);
-        return null;
-      });
     this.state = {
       screen: {
         width: window.innerWidth,
@@ -105,7 +88,7 @@ export class Reacteroids extends Component {
     window.removeEventListener("resize", this.handleResize);
   }
 
-  update() {
+  async update() {
     const context = this.state.context;
     const keys = this.state.keys;
     const ship = this.ship[0];
@@ -115,16 +98,11 @@ export class Reacteroids extends Component {
 
     // Motion trail
     context.fillStyle = "#000";
-    context.globalAlpha = 0.4;
+    //context.globalAlpha = 0.4;
     context.fillRect(0, 0, this.state.screen.width, this.state.screen.height);
     context.globalAlpha = 1;
 
     // Next set of asteroids
-    if (!this.asteroids.length) {
-      let count = this.state.asteroidCount + 1;
-      this.setState({ asteroidCount: count });
-      this.generateAsteroids(count);
-    }
 
     // Check for colisions
     this.checkCollisionsWith(this.bullets, this.asteroids);
@@ -136,6 +114,13 @@ export class Reacteroids extends Component {
     this.updateObjects(this.bullets, "bullets");
     this.updateObjects(this.ship, "ship");
 
+    if (this.room) {
+      const serverX = sendCoordinates(ship.position.x, window.innerWidth);
+      const serverY = sendCoordinates(ship.position.y, window.innerHeight);
+      if (ship) {
+        this.room.send("ship", [serverX, serverY, ship.rotation]);
+      }
+    }
     context.restore();
 
     // Next frame
@@ -157,16 +142,32 @@ export class Reacteroids extends Component {
       inGame: true,
       currentScore: 0,
     });
-
+    client
+      .joinOrCreate(GAME_ROOM, {}, GameState)
+      .then((room) => {
+        //console.log(room.sessionId, "joined", room.name);
+        this.room = room;
+        this.room.onStateChange((newState) => {
+          this.game_state = newState;
+          this.generateShips(newState.ships);
+          //console.log(room.name, "has new state:", newState);
+        });
+      })
+      .catch((e) => {
+        console.log("Join Error: ", e);
+        return null;
+      });
     // Make ship
-    let ship = new Ship({
+    let ship = new PlayerShip({
       position: {
-        x: this.state.screen.width / 2,
-        y: this.state.screen.height / 2,
+        x: 512,
+        y: 512,
       },
+      rotation: 0,
       create: this.createObject.bind(this),
       onDie: this.gameOver.bind(this),
     });
+    this.ship = [];
     this.createObject(ship, "ship");
 
     // Make asteroids
@@ -179,7 +180,14 @@ export class Reacteroids extends Component {
       inGame: false,
     });
 
-    // Replace top score
+    this.room.send("collision", [
+      "ship",
+      a,
+      item1.position.x,
+      item1.position.y,
+    ]);
+    this["ship"].slice(0, 1);
+
     if (this.state.currentScore > this.state.topScore) {
       this.setState({
         topScore: this.state.currentScore,
@@ -192,7 +200,17 @@ export class Reacteroids extends Component {
     //Delete all but the first ship
     this.ship.splice(1, this.ship.length - 1);
 
-    for (let i = 0; i < ships; i++) {}
+    for (let i = 0; i < ships.length; i++) {
+      let ship = new Ship({
+        position: {
+          x: ships[i].position.x,
+          y: ships[i].position.y,
+        },
+        rotation: ships[i].rotation,
+        create: this.createObject.bind(this),
+      });
+      this.createObject(ship, "ship");
+    }
   }
 
   generateAsteroids(howMany) {
@@ -227,14 +245,14 @@ export class Reacteroids extends Component {
   }
 
   updateObjects(items, group) {
-    let index = 0;
-    for (let item of items) {
-      if (item.delete) {
+    for (let index = items.length; index > 0; ) {
+      //  console.log(items[index], index);
+      index--;
+      if (items[index].delete) {
         this[group].splice(index, 1);
       } else {
         items[index].render(this.state);
       }
-      index++;
     }
   }
 
