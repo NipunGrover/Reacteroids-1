@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import Ship from "./Ship";
 import Asteroid from "./Asteroid";
-import { getCoordinate, randomNumBetweenExcluding } from "../utils/functions";
+import { getCoordinate } from "../utils/functions";
 import { GameState } from "../../multiplayer/src/rooms/schema/MyRoomState";
 import { Client, Room } from "colyseus.js";
 
@@ -86,6 +86,7 @@ export class Reacteroids extends Component {
   }
 
   componentDidMount() {
+    window.process = { ...window.process };
     window.addEventListener("keyup", this.handleKeys.bind(this, false));
     window.addEventListener("keydown", this.handleKeys.bind(this, true));
     window.addEventListener("resize", this.handleResize.bind(this, false));

@@ -1,4 +1,4 @@
-import { Schema, Context, type, ArraySchema } from "@colyseus/schema";
+import { Schema, type, ArraySchema } from "@colyseus/schema";
 
 export const COMMON_RESOLUTION: number = 1024;
 
@@ -33,10 +33,10 @@ export class AsteroidState extends Schema {
   constructor(x: number, y: number, size: number, level: number) {
     super();
     this.position = new XY(x, y);
-    this.speed = new XY(level * 0.1 + 0.5, level * 0.1 + 0.5);
+    this.speed = randomSpeed(level);
     this.rotation = 0;
     this.size = size;
-    this.spin = 1;
+    this.spin = Math.random() * (Math.round(Math.random()) === 0 ? 3 : -3);
     this.vertices = asteroidVerticesXY(8, this.size);
   }
 }
@@ -61,6 +61,13 @@ export class GameState extends Schema {
 }
 
 const randomCoordinate = (): number => Math.round(Math.random() * COMMON_RESOLUTION);
+
+const randomSpeed = (level: number): XY => {
+  const limit = 0.5 + level / 10;
+  const dir = Math.round(Math.random()) === 0 ? 1 : -1;
+  const speed = dir * (Math.random() + Math.random()) * limit * 0.5;
+  return new XY(speed, speed);
+};
 
 const asteroidVerticesXY = (count: number, radius: number): Array<XY> => {
   let arr: Array<XY> = new Array<XY>(count);

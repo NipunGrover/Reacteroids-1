@@ -1,5 +1,5 @@
 import { Room, Client } from "@colyseus/core";
-import { GameState, AsteroidState } from "./schema/MyRoomState";
+import { GameState, AsteroidState, COMMON_RESOLUTION } from "./schema/MyRoomState";
 
 export class MyRoom extends Room<GameState> {
   players: Map<string, number> = new Map<string, number>();
@@ -46,10 +46,15 @@ export class MyRoom extends Room<GameState> {
     for (let i = 0; i < this.state.asteroids.length; i++) {
       let asteroid: AsteroidState = this.state.asteroids[i];
       asteroid.rotation = (asteroid.rotation + asteroid.spin) % 360;
+
+      asteroid.position.x = asteroid.position.x + asteroid.speed.x < 0 ? COMMON_RESOLUTION - asteroid.position.x : (asteroid.position.x + asteroid.speed.x) % COMMON_RESOLUTION;
+      asteroid.position.y = asteroid.position.y + asteroid.speed.y < 0 ? COMMON_RESOLUTION - asteroid.position.y : (asteroid.position.y + asteroid.speed.y) % COMMON_RESOLUTION;
     }
   };
 
   destoryAsteroid = (index: number, x: number, y: number) => {
+    if (index >= this.state.asteroids.length) return;
+
     const asteroid = this.state.asteroids[index];
     if (asteroid.size > 10) {
       this.splitAsteroid(asteroid.size / 2, asteroid.position.x, asteroid.position.y);

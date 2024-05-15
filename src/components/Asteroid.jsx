@@ -1,5 +1,5 @@
 import Particle from "./Particle";
-import { asteroidVertices, randomNumBetween, getCoordinate } from "../utils/functions";
+import { randomNumBetween, getCoordinate } from "../utils/functions";
 
 export default class Asteroid {
   constructor(args) {
@@ -59,25 +59,6 @@ export default class Asteroid {
   }
 
   render(state) {
-    // Move
-    this.position.x += this.velocity.x;
-    this.position.y += this.velocity.y;
-
-    // Rotation
-    this.rotation += this.rotationSpeed;
-    if (this.rotation >= 360) {
-      this.rotation -= 360;
-    }
-    if (this.rotation < 0) {
-      this.rotation += 360;
-    }
-
-    // Screen edges
-    if (this.position.x > state.screen.width + this.radius) this.position.x = -this.radius;
-    else if (this.position.x < -this.radius) this.position.x = state.screen.width + this.radius;
-    if (this.position.y > state.screen.height + this.radius) this.position.y = -this.radius;
-    else if (this.position.y < -this.radius) this.position.y = state.screen.height + this.radius;
-
     // Draw
     const context = state.context;
     context.save();
