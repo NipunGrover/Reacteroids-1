@@ -1,24 +1,31 @@
 import { Room, Client } from "@colyseus/core";
-import { MyRoomState } from "./schema/MyRoomState";
+import { GameState, AsteroidState } from "./schema/MyRoomState";
 
-export class MyRoom extends Room<MyRoomState> {
-  maxClients = 4;
+export class MyRoom extends Room<GameState> {
+  players: Map<string, number> = new Map<string, number>();
 
-  onCreate (options: any) {
-    this.setState(new MyRoomState());
+  onCreate(options: any) {
+    this.setState(new GameState());
 
-    this.onMessage("type", (client, message) => {
-      //
-      // handle "type" message
-      //
+    this.onMessage("start", (client, message) => {
+      this.state = new GameState();
     });
+
+    this.onMessage("collision", (client, message) => {
+      const [type, index, x, y] = message;
+
+      if (type === "asteroid") this.destoryAsteroid(index, x, y);
+      else if (type === "ship") this.state.players.splice(this.players.get(client.id), 1);
+    });
+
+    this.setSimulationInterval((tick) => this.update(tick));
   }
 
-  onJoin (client: Client, options: any) {
+  onJoin(client: Client, options: any) {
     console.log(client.sessionId, "joined!");
   }
 
-  onLeave (client: Client, consented: boolean) {
+  onLeave(client: Client, consented: boolean) {
     console.log(client.sessionId, "left!");
   }
 
@@ -26,4 +33,32 @@ export class MyRoom extends Room<MyRoomState> {
     console.log("room", this.roomId, "disposing...");
   }
 
+  update(tick: number) {
+    if (this.state.asteroids.length === 0) {
+      this.state.level++;
+      this.state.generateAsteroids();
+      return;
+    }
+    this.moveAsteroids(tick);
+  }
+
+  moveAsteroids = (tick: number) => {
+    for (let i = 0; i < this.state.asteroids.length; i++) {
+      let asteroid: AsteroidState = this.state.asteroids[i];
+      asteroid.rotation = (asteroid.rotation + asteroid.spin) % 360;
+    }
+  };
+
+  destoryAsteroid = (index: number, x: number, y: number) => {
+    const asteroid = this.state.asteroids[index];
+    if (asteroid.size > 10) {
+      this.splitAsteroid(asteroid.size / 2, asteroid.position.x, asteroid.position.y);
+    }
+    this.state.asteroids.splice(index, 1);
+  };
+
+  splitAsteroid = (size: number, x: number, y: number) => {
+    this.state.asteroids.push(new AsteroidState(x, y, size, this.state.level));
+    this.state.asteroids.push(new AsteroidState(x, y, size, this.state.level));
+  };
 }

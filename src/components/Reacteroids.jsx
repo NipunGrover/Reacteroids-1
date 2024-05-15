@@ -1,7 +1,8 @@
 import React, { Component } from "react";
 import Ship from "./Ship";
 import Asteroid from "./Asteroid";
-import { randomNumBetweenExcluding } from "../utils/functions";
+import { getCoordinate, randomNumBetweenExcluding } from "../utils/functions";
+import { GameState } from "../../multiplayer/src/rooms/schema/MyRoomState";
 import { Client, Room } from "colyseus.js";
 
 const COLYSEUS_HOST = "ws://localhost:2567";
@@ -29,8 +30,6 @@ export class Reacteroids extends Component {
         this.room = room;
         this.room.onStateChange((newState) => {
           this.game_state = newState;
-          //  this.generateAsteroids(newState.level + 3);
-          console.log(room.name, "has new state:", newState);
         });
         this.room.onMessage("message_type", (message) => {
           console.log(room.sessionId, "received on", room.name, message);
@@ -93,10 +92,8 @@ export class Reacteroids extends Component {
 
     const context = this.refs.canvas.getContext("2d");
     this.setState({ context: context });
-    this.startGame();
-    requestAnimationFrame(() => {
-      this.update();
-    });
+
+    requestAnimationFrame(() => this.update());
   }
 
   componentWillUnmount() {
@@ -118,13 +115,6 @@ export class Reacteroids extends Component {
     context.globalAlpha = 0.4;
     context.fillRect(0, 0, this.state.screen.width, this.state.screen.height);
     context.globalAlpha = 1;
-
-    // Next set of asteroids
-    if (!this.asteroids.length) {
-      let count = this.state.asteroidCount + 1;
-      this.setState({ asteroidCount: count });
-      this.generateAsteroids(count);
-    }
 
     // Check for colisions
     this.checkCollisionsWith(this.bullets, this.asteroids);
@@ -158,6 +148,17 @@ export class Reacteroids extends Component {
       currentScore: 0,
     });
 
+    client
+      .joinOrCreate("my_room", {}, GameState)
+      .then((room) => {
+        this.room = room;
+        this.room.onStateChange((newState) => {
+          this.game_state = newState;
+          this.generateAsteroids(newState.asteroids);
+        });
+      })
+      .catch((e) => console.log(e));
+
     // Make ship
     let ship = new Ship({
       position: {
@@ -168,16 +169,17 @@ export class Reacteroids extends Component {
       onDie: this.gameOver.bind(this),
     });
     this.createObject(ship, "ship");
-
-    // Make asteroids
-    this.asteroids = [];
-    //this.generateAsteroids(this.state.asteroidCount);
   }
 
   gameOver() {
     this.setState({
       inGame: false,
     });
+
+    const posX = getCoordinate(this.ship[0].position.x, window.innerWidth);
+    const posY = getCoordinate(this.ship[0].position.y, window.innerHeight);
+    this.room.send("collision", ["ship", 0, posX, posY]);
+    this.room.leave(true);
 
     // Replace top score
     if (this.state.currentScore > this.state.topScore) {
@@ -188,26 +190,11 @@ export class Reacteroids extends Component {
     }
   }
 
-  generateAsteroids(howMany) {
-    let asteroids = [];
-    let ship = this.ship[0];
-    for (let i = 0; i < howMany; i++) {
+  generateAsteroids(asteroids) {
+    this.asteroids = [];
+    for (let i = 0; i < asteroids.length; i++) {
       let asteroid = new Asteroid({
-        size: 80,
-        position: {
-          x: randomNumBetweenExcluding(
-            0,
-            this.state.screen.width,
-            ship.position.x - 60,
-            ship.position.x + 60
-          ),
-          y: randomNumBetweenExcluding(
-            0,
-            this.state.screen.height,
-            ship.position.y - 60,
-            ship.position.y + 60
-          ),
-        },
+        stats: asteroids[i],
         create: this.createObject.bind(this),
         addScore: this.addScore.bind(this),
       });
@@ -240,6 +227,7 @@ export class Reacteroids extends Component {
         var item1 = items1[a];
         var item2 = items2[b];
         if (this.checkCollision(item1, item2)) {
+          this.room.send("collision", ["asteroid", b, item2.position.x, item2.position.y]);
           item1.destroy();
           item2.destroy();
         }
@@ -289,10 +277,7 @@ export class Reacteroids extends Component {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-16 z-1 text-center">
           <p>Game over, man!</p>
           <p>{message}</p>
-          <button
-            className="border-4 border-white bg-transparent text-white text-m px-10 py-5 m-5 cursor-pointer hover:bg-white hover:text-black"
-            onClick={this.startGame.bind(this)}
-          >
+          <button className="border-4 border-white bg-transparent text-white text-m px-10 py-5 m-5 cursor-pointer hover:bg-white hover:text-black" onClick={this.startGame.bind(this)}>
             try again?
           </button>
         </div>
@@ -302,22 +287,14 @@ export class Reacteroids extends Component {
     return (
       <div>
         {endgame}
-        <span className="block absolute top-15 z-1 text-sm left-20">
-          Score: {this.state.currentScore}
-        </span>
-        <span className="block absolute top-15 z-1 text-sm right-20">
-          Top Score: {this.state.topScore}
-        </span>
+        <span className="block absolute top-15 z-1 text-sm left-20">Score: {this.state.currentScore}</span>
+        <span className="block absolute top-15 z-1 text-sm right-20">Top Score: {this.state.topScore}</span>
         <span className="block absolute top-15 left-1/2 -translate-x-1/2 translate-y-0 z-1 text-sm text-center leading-normal">
           Use [A][S][W][D] or [←][↑][↓][→] to MOVE
           <br />
           Use [SPACE] to SHOOT
         </span>
-        <canvas
-          ref="canvas"
-          width={this.state.screen.width * this.state.screen.ratio}
-          height={this.state.screen.height * this.state.screen.ratio}
-        />
+        <canvas ref="canvas" width={this.state.screen.width * this.state.screen.ratio} height={this.state.screen.height * this.state.screen.ratio} />
       </div>
     );
   }
