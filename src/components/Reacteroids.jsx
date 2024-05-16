@@ -200,7 +200,7 @@ export class Reacteroids extends Component {
             x: players[i].ship.position.x,
             y: players[i].ship.position.y,
           },
-          rotation: players[i].ship.rtn,
+          rotation: players[i].ship.rotation,
           create: this.createObject.bind(this), // for creating particles
         });
         this.createObject(ship, "xships");
