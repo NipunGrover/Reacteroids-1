@@ -1,7 +1,10 @@
-import { Schema, type, ArraySchema } from "@colyseus/schema";
+import { ArraySchema, Schema, type } from "@colyseus/schema";
 
-export const COMMON_RESOLUTION: number = 1024;
+// export class MyRoomState extends Schema {
+export const COMMON_PIXELS: number = 1024;
+// @type("string") mySynchronizedProperty: string = "Hello world";
 
+// }
 export class XY extends Schema {
   @type("number") x: number;
   @type("number") y: number;
@@ -41,14 +44,26 @@ export class AsteroidState extends Schema {
   }
 }
 
+export class ShipState extends Schema {
+  @type(XY) position: XY;
+  @type("number") rotation: number;
+  constructor(position: XY, rotation: number) {
+    super();
+    this.position = position;
+    this.rotation = rotation;
+  }
+}
+
 export class GameState extends Schema {
   @type("number") level: number;
   @type([PlayerState]) players: PlayerState[];
   @type([AsteroidState]) asteroids: AsteroidState[];
+  @type([ShipState]) ships: ShipState[];
 
   constructor(level: number = 1) {
     super();
     this.level = level;
+    this.ships = new ArraySchema<ShipState>(...new Array<ShipState>());
     this.asteroids = new ArraySchema<AsteroidState>(...new ArraySchema<AsteroidState>());
     this.generateAsteroids();
   }
@@ -60,7 +75,7 @@ export class GameState extends Schema {
   }
 }
 
-const randomCoordinate = (): number => Math.round(Math.random() * COMMON_RESOLUTION);
+const randomCoordinate = (): number => Math.round(Math.random() * COMMON_PIXELS);
 
 const randomSpeed = (level: number): XY => {
   const limit = level;

@@ -1,15 +1,15 @@
 import Particle from "./Particle";
-import { randomNumBetween, getCoordinate } from "../utils/functions";
+import { randomNumBetween, getCoordinates } from "../utils/functions";
 
 export default class Asteroid {
   constructor(args) {
     this.position = {
-      x: getCoordinate(args.stats.position.x, window.innerWidth),
-      y: getCoordinate(args.stats.position.y, window.innerHeight),
+      x: getCoordinates(args.stats.position.x, window.innerWidth),
+      y: getCoordinates(args.stats.position.y, window.innerHeight),
     };
     this.velocity = {
-      x: getCoordinate(args.stats.speed.x, window.innerWidth),
-      y: getCoordinate(args.stats.speed.y, window.innerHeight),
+      x: getCoordinates(args.stats.speed.x, window.innerWidth),
+      y: getCoordinates(args.stats.speed.y, window.innerHeight),
     };
     this.rotation = args.stats.rotation;
     this.rotationSpeed = args.stats.spin;

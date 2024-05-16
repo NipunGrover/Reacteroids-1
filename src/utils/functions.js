@@ -1,4 +1,22 @@
-import { COMMON_RESOLUTION } from "../../multiplayer/src/rooms/schema/MyRoomState";
+import { COMMON_PIXELS } from "../../multiplayer/src/rooms/schema/MyRoomState";
+/**
+ * Rotate point around center on certain angle
+ * @param {Object} p        {x: Number, y: Number}
+ * @param {Object} center   {x: Number, y: Number}
+ * @param {Number} angle    Angle in radians
+ */
+
+export function asteroidVertices(count, rad) {
+  let p = [];
+  for (let i = 0; i < count; i++) {
+    p[i] = {
+      x: (-Math.sin(((360 / count) * i * Math.PI) / 180) + (Math.round(Math.random() * 2 - 1) * Math.random()) / 3) * rad,
+      y: (-Math.cos(((360 / count) * i * Math.PI) / 180) + (Math.round(Math.random() * 2 - 1) * Math.random()) / 3) * rad,
+    };
+  }
+  return p;
+}
+
 /**
  * Rotate point around center on certain angle
  * @param {Object} p        {x: Number, y: Number}
@@ -30,10 +48,16 @@ export function randomNumBetweenExcluding(min, max, exMin, exMax) {
   return random;
 }
 
-export function getCoordinate(coord, resolution) {
-  return Math.round((coord * resolution) / COMMON_RESOLUTION);
+// we need to translate coordinates from the COMMON_PIXELS * COMMON_PIXELS game board : taken from Jonathan B
+export function getCoordinates(serverCoordinate, localResolution) {
+  return Math.round((serverCoordinate * localResolution) / COMMON_PIXELS);
 }
 
-export function sendCoordindate(coord, resolution) {
-  return Math.round((coord * COMMON_RESOLUTION) / resolution);
+// we need to translate coordinates back to the COMMON_PIXELS * COMMON_PIXELS game board: taken from Jonathan B
+export function sendCoordinates(localCoordinate, localResolution) {
+  return Math.round((localCoordinate * COMMON_PIXELS) / localResolution);
+}
+
+export function lerp(start, end, t) {
+  return start * (1 - t) + end * t;
 }

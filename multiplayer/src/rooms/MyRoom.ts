@@ -1,5 +1,5 @@
 import { Room, Client } from "@colyseus/core";
-import { GameState, AsteroidState, COMMON_RESOLUTION } from "./schema/MyRoomState";
+import { GameState, ShipState, AsteroidState, XY, COMMON_PIXELS } from "./schema/MyRoomState";
 
 export class MyRoom extends Room<GameState> {
   players: Map<string, number> = new Map<string, number>();
@@ -11,11 +11,31 @@ export class MyRoom extends Room<GameState> {
       this.state = new GameState();
     });
 
+    this.onMessage("ship", (client, message) => {
+      let [x, y, rotation] = message;
+      if (this.players.has(client.id)) {
+        const index = this.players.get(client.id);
+        if (index < this.state.ships.length) {
+          this.state.ships[index].position = new XY(x, y);
+          this.state.ships[index].rotation = rotation;
+        } else {
+          this.players.delete(client.id);
+        }
+      } else {
+        this.state.ships.push(new ShipState(new XY(x, y), rotation));
+        this.players.set(client.id, this.state.ships.length - 1);
+      }
+    });
+
     this.onMessage("collision", (client, message) => {
       const [type, index, x, y] = message;
 
       if (type === "asteroid") this.destoryAsteroid(index, x, y);
-      else if (type === "ship") this.state.players.splice(this.players.get(client.id), 1);
+      else if (type === "ship") {
+        // this.state.players.splice(this.players.get(client.id), 1);
+        this.players.clear();
+        this.state.ships.splice(0, this.state.ships.length);
+      }
     });
 
     this.setSimulationInterval(() => this.update());
@@ -27,6 +47,16 @@ export class MyRoom extends Room<GameState> {
 
   onLeave(client: Client, consented: boolean) {
     console.log("##", client.sessionId, "LEFT!");
+    if (this.players.has(client.id)) {
+      console.log(client.sessionId, "HAS INDEX!");
+      const index = this.players.get(client.id);
+      this.players.delete(client.id);
+      if (index < this.state.ships.length) {
+        console.log(client.sessionId, "HAS SLICE!");
+
+        this.state.ships.slice(index, 1);
+      }
+    }
   }
 
   onDispose() {
@@ -54,10 +84,10 @@ export class MyRoom extends Room<GameState> {
       asteroid.position.y += asteroid.speed.y;
 
       // Screen edges
-      if (asteroid.position.x > COMMON_RESOLUTION + asteroid.size) asteroid.position.x = -asteroid.size;
-      else if (asteroid.position.x < -asteroid.size) asteroid.position.x = COMMON_RESOLUTION + asteroid.size;
-      if (asteroid.position.y > COMMON_RESOLUTION + asteroid.size) asteroid.position.y = -asteroid.size;
-      else if (asteroid.position.y < -asteroid.size) asteroid.position.y = COMMON_RESOLUTION + asteroid.size;
+      if (asteroid.position.x > COMMON_PIXELS + asteroid.size) asteroid.position.x = -asteroid.size;
+      else if (asteroid.position.x < -asteroid.size) asteroid.position.x = COMMON_PIXELS + asteroid.size;
+      if (asteroid.position.y > COMMON_PIXELS + asteroid.size) asteroid.position.y = -asteroid.size;
+      else if (asteroid.position.y < -asteroid.size) asteroid.position.y = COMMON_PIXELS + asteroid.size;
     }
   };
 

@@ -1,9 +1,9 @@
 import React, { Component } from "react";
-import Ship from "./Ship";
+import { Ship, PlayerShip } from "./Ship";
 import Asteroid from "./Asteroid";
-import { getCoordinate, sendCoordindate } from "../utils/functions";
-import { GameState } from "../../multiplayer/src/rooms/schema/MyRoomState";
+import { getCoordinates, lerp, sendCoordinates } from "../utils/functions";
 import { Client, Room } from "colyseus.js";
+import { GameState } from "../../multiplayer/src/rooms/schema/MyRoomState";
 
 const COLYSEUS_HOST = "ws://localhost:2567";
 const GAME_ROOM = "my_room";
@@ -96,7 +96,7 @@ export class Reacteroids extends Component {
 
     // Motion trail
     context.fillStyle = "#000";
-    context.globalAlpha = 0.4;
+    //context.globalAlpha = 0.4;
     context.fillRect(0, 0, this.state.screen.width, this.state.screen.height);
     context.globalAlpha = 1;
 
@@ -110,6 +110,14 @@ export class Reacteroids extends Component {
     this.updateObjects(this.bullets, "bullets");
     this.updateObjects(this.ship, "ship");
 
+    if (this.room) {
+      const serverX = sendCoordinates(ship.position.x, window.innerWidth);
+      const serverY = sendCoordinates(ship.position.y, window.innerHeight);
+
+      if (ship) {
+        this.room.send("ship", [serverX, serverY, ship.rotation]);
+      }
+    }
     context.restore();
 
     // Next frame
@@ -131,27 +139,33 @@ export class Reacteroids extends Component {
       inGame: true,
       currentScore: 0,
     });
-
     client
       .joinOrCreate(GAME_ROOM, {}, GameState)
       .then((room) => {
+        //console.log(room.sessionId, "joined", room.name);
         this.room = room;
+        this.generateShips(this.room.state.ships);
         this.room.onStateChange((newState) => {
           this.game_state = newState;
+          this.generateShips(newState.ships);
           this.generateAsteroids(newState.asteroids);
         });
       })
-      .catch((e) => console.log(e));
-
+      .catch((e) => {
+        console.log("Join Error: ", e);
+        return null;
+      });
     // Make ship
-    let ship = new Ship({
+    let ship = new PlayerShip({
       position: {
-        x: this.state.screen.width / 2,
-        y: this.state.screen.height / 2,
+        x: 512,
+        y: 512,
       },
+      rotation: 0,
       create: this.createObject.bind(this),
       onDie: this.gameOver.bind(this),
     });
+    this.ship = [];
     this.createObject(ship, "ship");
   }
 
@@ -160,8 +174,8 @@ export class Reacteroids extends Component {
       inGame: false,
     });
 
-    const posX = getCoordinate(this.ship[0].position.x, window.innerWidth);
-    const posY = getCoordinate(this.ship[0].position.y, window.innerHeight);
+    const posX = getCoordinates(this.ship[0].position.x, window.innerWidth);
+    const posY = getCoordinates(this.ship[0].position.y, window.innerHeight);
     this.room.send("collision", ["ship", 0, posX, posY]);
     this.room.leave(true);
 
@@ -171,6 +185,24 @@ export class Reacteroids extends Component {
         topScore: this.state.currentScore,
       });
       localStorage["topscore"] = this.state.currentScore;
+    }
+  }
+
+  generateShips(ships) {
+    //Delete all but the first ship
+    this.ship.splice(1, this.ship.length - 1);
+    for (let i = 0; i < ships.length; i++) {
+      let ship = new Ship({
+        position: {
+          x: ships[i].position.x,
+          y: ships[i].position.y,
+          //  x: lerp(this.ship[i].position.x, ships[i].position.x, 0.25),
+          //   y: lerp(this.ship[i].position.y, ships[i].position.y, 0.25),
+        },
+        rotation: ships[i].rotation,
+        create: this.createObject.bind(this),
+      });
+      this.createObject(ship, "ship");
     }
   }
 
@@ -191,14 +223,14 @@ export class Reacteroids extends Component {
   }
 
   updateObjects(items, group) {
-    let index = 0;
-    for (let item of items) {
-      if (item.delete) {
+    for (let index = items.length; index > 0; ) {
+      //  console.log(items[index], index);
+      index--;
+      if (items[index].delete) {
         this[group].splice(index, 1);
       } else {
         items[index].render(this.state);
       }
-      index++;
     }
   }
 
