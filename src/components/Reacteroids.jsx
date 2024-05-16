@@ -1,12 +1,8 @@
 import React, { Component } from "react";
 import { Ship, PlayerShip } from "./Ship";
 import Asteroid from "./Asteroid";
-import {
-  lerp,
-  randomNumBetweenExcluding,
-  sendCoordinates,
-} from "../utils/functions";
-import { Client, Room } from "colyseus.js";
+import { getCoordinates, sendCoordinates } from "../utils/functions";
+import { Client } from "colyseus.js";
 import { GameState } from "../../multiplayer/src/rooms/schema/MyRoomState";
 
 const COLYSEUS_HOST = "ws://localhost:2567";
@@ -41,12 +37,12 @@ export class Reacteroids extends Component {
         down: 0,
         space: 0,
       },
-      asteroidCount: 3,
       currentScore: 0,
       topScore: localStorage["topscore"] || 0,
       inGame: false,
     };
     this.ship = [];
+    this.xships = [];
     this.asteroids = [];
     this.bullets = [];
     this.particles = [];
@@ -74,16 +70,15 @@ export class Reacteroids extends Component {
   }
 
   componentDidMount() {
+    window.process = { ...window.process };
     window.addEventListener("keyup", this.handleKeys.bind(this, false));
     window.addEventListener("keydown", this.handleKeys.bind(this, true));
     window.addEventListener("resize", this.handleResize.bind(this, false));
 
     const context = this.refs.canvas.getContext("2d");
     this.setState({ context: context });
-    this.startGame();
-    requestAnimationFrame(() => {
-      this.update();
-    });
+
+    requestAnimationFrame(() => this.update());
   }
 
   componentWillUnmount() {
@@ -102,11 +97,9 @@ export class Reacteroids extends Component {
 
     // Motion trail
     context.fillStyle = "#000";
-    //context.globalAlpha = 0.4;
+    context.globalAlpha = 0.1;
     context.fillRect(0, 0, this.state.screen.width, this.state.screen.height);
     context.globalAlpha = 1;
-
-    // Next set of asteroids
 
     // Check for colisions
     this.checkCollisionsWith(this.bullets, this.asteroids);
@@ -117,14 +110,12 @@ export class Reacteroids extends Component {
     this.updateObjects(this.asteroids, "asteroids");
     this.updateObjects(this.bullets, "bullets");
     this.updateObjects(this.ship, "ship");
+    this.updateObjects(this.xships, "xships");
 
-    if (this.room) {
+    if (this.room && ship) {
       const serverX = sendCoordinates(ship.position.x, window.innerWidth);
       const serverY = sendCoordinates(ship.position.y, window.innerHeight);
-
-      if (ship) {
-        this.room.send("ship", [serverX, serverY, ship.rotation]);
-      }
+      this.room.send("ship", [serverX, serverY, ship.rotation]);
     }
     context.restore();
 
@@ -147,22 +138,22 @@ export class Reacteroids extends Component {
       inGame: true,
       currentScore: 0,
     });
+
     client
       .joinOrCreate(GAME_ROOM, {}, GameState)
       .then((room) => {
-        //console.log(room.sessionId, "joined", room.name);
         this.room = room;
-        this.generateShips(this.room.state.ships);
-
         this.room.onStateChange((newState) => {
           this.game_state = newState;
-          this.generateShips(newState.ships);
+          this.generateShips(newState.players);
+          this.generateAsteroids(newState.asteroids);
         });
       })
       .catch((e) => {
         console.log("Join Error: ", e);
         return null;
       });
+
     // Make ship
     let ship = new PlayerShip({
       position: {
@@ -175,10 +166,6 @@ export class Reacteroids extends Component {
     });
     this.ship = [];
     this.createObject(ship, "ship");
-
-    // Make asteroids
-    this.asteroids = [];
-    //this.generateAsteroids(this.state.asteroidCount);
   }
 
   gameOver() {
@@ -186,14 +173,15 @@ export class Reacteroids extends Component {
       inGame: false,
     });
 
-    this.room.send("collision", [
-      "ship",
-      a,
-      item1.position.x,
-      item1.position.y,
-    ]);
-    this["ship"].slice(0, 1);
+    if (this.ship.length) {
+      const serverX = sendCoordinates(this.ship[0].position.x, window.innerWidth);
+      const serverY = sendCoordinates(this.ship[0].position.y, window.innerHeight);
+      this.room.send("collision", ["ship", 0, serverX, serverY]);
+      this.ship[0].delete = true;
+    }
+    this.room.leave(true);
 
+    // Replace top score
     if (this.state.currentScore > this.state.topScore) {
       this.setState({
         topScore: this.state.currentScore,
@@ -201,44 +189,30 @@ export class Reacteroids extends Component {
       localStorage["topscore"] = this.state.currentScore;
     }
   }
-  generateShips(ships) {
-    //Delete all but the first ship
-    this.ship.splice(1, this.ship.length - 1);
-    for (let i = 0; i < ships.length; i++) {
-      let ship = new Ship({
-        position: {
-          x: ships[i].position.x,
-          y: ships[i].position.y,
-          //  x: lerp(this.ship[i].position.x, ships[i].position.x, 0.25),
-          //   y: lerp(this.ship[i].position.y, ships[i].position.y, 0.25),
-        },
-        rotation: ships[i].rotation,
-        create: this.createObject.bind(this),
-      });
-      this.createObject(ship, "ship");
+
+  generateShips(players) {
+    // wipe all ghosts
+    this.xships.splice(0, this.xships.length);
+    for (let i = 0; i < players.length; i++) {
+      if (players[i].id != this.room.sessionId) {
+        let ship = new Ship({
+          position: {
+            x: players[i].ship.position.x,
+            y: players[i].ship.position.y,
+          },
+          rotation: players[i].ship.rotation,
+          create: this.createObject.bind(this), // for creating particles
+        });
+        this.createObject(ship, "xships");
+      }
     }
   }
 
-  generateAsteroids(howMany) {
-    let asteroids = [];
-    let ship = this.ship[0];
-    for (let i = 0; i < howMany; i++) {
+  generateAsteroids(asteroids) {
+    this.asteroids = [];
+    for (let i = 0; i < asteroids.length; i++) {
       let asteroid = new Asteroid({
-        size: 80,
-        position: {
-          x: randomNumBetweenExcluding(
-            0,
-            this.state.screen.width,
-            ship.position.x - 60,
-            ship.position.x + 60
-          ),
-          y: randomNumBetweenExcluding(
-            0,
-            this.state.screen.height,
-            ship.position.y - 60,
-            ship.position.y + 60
-          ),
-        },
+        stats: asteroids[i],
         create: this.createObject.bind(this),
         addScore: this.addScore.bind(this),
       });
@@ -271,6 +245,9 @@ export class Reacteroids extends Component {
         var item1 = items1[a];
         var item2 = items2[b];
         if (this.checkCollision(item1, item2)) {
+          let serverX = sendCoordindate(item2.position.x, window.innerWidth);
+          let serverY = sendCoordindate(item2.position.y, window.innerWidth);
+          this.room.send("collision", ["asteroid", b, serverX, serverY]);
           item1.destroy();
           item2.destroy();
         }
@@ -288,6 +265,9 @@ export class Reacteroids extends Component {
         var item2 = items2[b];
         if (this.checkCollision(item1, item2)) {
           item1.destroy();
+          if (a === 0) {
+            this.gameOver();
+          }
         }
       }
     }
@@ -320,10 +300,7 @@ export class Reacteroids extends Component {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-16 z-1 text-center">
           <p>Game over, man!</p>
           <p>{message}</p>
-          <button
-            className="border-4 border-white bg-transparent text-white text-m px-10 py-5 m-5 cursor-pointer hover:bg-white hover:text-black"
-            onClick={this.startGame.bind(this)}
-          >
+          <button className="border-4 border-white bg-transparent text-white text-m px-10 py-5 m-5 cursor-pointer hover:bg-white hover:text-black" onClick={this.startGame.bind(this)}>
             try again?
           </button>
         </div>
@@ -333,22 +310,14 @@ export class Reacteroids extends Component {
     return (
       <div>
         {endgame}
-        <span className="block absolute top-15 z-1 text-sm left-20">
-          Score: {this.state.currentScore}
-        </span>
-        <span className="block absolute top-15 z-1 text-sm right-20">
-          Top Score: {this.state.topScore}
-        </span>
+        <span className="block absolute top-15 z-1 text-sm left-20">Score: {this.state.currentScore}</span>
+        <span className="block absolute top-15 z-1 text-sm right-20">Top Score: {this.state.topScore}</span>
         <span className="block absolute top-15 left-1/2 -translate-x-1/2 translate-y-0 z-1 text-sm text-center leading-normal">
           Use [A][S][W][D] or [←][↑][↓][→] to MOVE
           <br />
           Use [SPACE] to SHOOT
         </span>
-        <canvas
-          ref="canvas"
-          width={this.state.screen.width * this.state.screen.ratio}
-          height={this.state.screen.height * this.state.screen.ratio}
-        />
+        <canvas ref="canvas" width={this.state.screen.width * this.state.screen.ratio} height={this.state.screen.height * this.state.screen.ratio} />
       </div>
     );
   }
