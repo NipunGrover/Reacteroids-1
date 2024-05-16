@@ -18,31 +18,31 @@ export class MyRoom extends Room<GameState> {
       else if (type === "ship") this.state.players.splice(this.players.get(client.id), 1);
     });
 
-    this.setSimulationInterval((tick) => this.update(tick));
+    this.setSimulationInterval(() => this.update());
   }
 
   onJoin(client: Client, options: any) {
-    console.log(client.sessionId, "joined!");
+    console.log("##", client.sessionId, "JOINED!");
   }
 
   onLeave(client: Client, consented: boolean) {
-    console.log(client.sessionId, "left!");
+    console.log("##", client.sessionId, "LEFT!");
   }
 
   onDispose() {
-    console.log("room", this.roomId, "disposing...");
+    console.log("## ROOM", this.roomId, "DISPOSING..");
   }
 
-  update(tick: number) {
+  update() {
+    // When the current level is cleared, level up and re-generate the asteroids.
     if (this.state.asteroids.length === 0) {
       this.state.level++;
       this.state.generateAsteroids();
-      return;
     }
-    this.moveAsteroids(tick);
+    this.moveAsteroids();
   }
 
-  moveAsteroids = (tick: number) => {
+  moveAsteroids = () => {
     for (let i = 0; i < this.state.asteroids.length; i++) {
       let asteroid: AsteroidState = this.state.asteroids[i];
 
@@ -61,6 +61,7 @@ export class MyRoom extends Room<GameState> {
     }
   };
 
+  // Destroy a asteroid when hit by a bullet
   destoryAsteroid = (index: number, x: number, y: number) => {
     if (index >= this.state.asteroids.length) return;
 
@@ -71,6 +72,7 @@ export class MyRoom extends Room<GameState> {
     this.state.asteroids.splice(index, 1);
   };
 
+  // Split a large asteroid
   splitAsteroid = (size: number, x: number, y: number) => {
     this.state.asteroids.push(new AsteroidState(x, y, size, this.state.level));
     this.state.asteroids.push(new AsteroidState(x, y, size, this.state.level));

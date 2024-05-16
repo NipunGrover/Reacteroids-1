@@ -63,9 +63,9 @@ export class GameState extends Schema {
 const randomCoordinate = (): number => Math.round(Math.random() * COMMON_RESOLUTION);
 
 const randomSpeed = (level: number): XY => {
-  const limit = 0.5 + level / 10;
+  const limit = level;
   const dir = Math.round(Math.random()) === 0 ? 1 : -1;
-  const speed = dir * (Math.random() + Math.random()) * limit;
+  const speed = dir * Math.random() * limit;
   return new XY(speed, speed);
 };
 
