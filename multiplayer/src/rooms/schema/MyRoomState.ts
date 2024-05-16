@@ -16,15 +16,6 @@ export class XY extends Schema {
   }
 }
 
-export class PlayerState extends Schema {
-  @type("string") id: string;
-
-  constructor(id: string) {
-    super();
-    this.id = id;
-  }
-}
-
 export class AsteroidState extends Schema {
   @type(XY) position: XY;
   @type(XY) speed: XY;
@@ -47,6 +38,7 @@ export class AsteroidState extends Schema {
 export class ShipState extends Schema {
   @type(XY) position: XY;
   @type("number") rotation: number;
+
   constructor(position: XY, rotation: number) {
     super();
     this.position = position;
@@ -54,16 +46,25 @@ export class ShipState extends Schema {
   }
 }
 
+export class PlayerState extends Schema {
+  @type("string") id: string;
+  @type(ShipState) ship: ShipState;
+
+  constructor(id: string) {
+    super();
+    this.id = id;
+  }
+}
+
 export class GameState extends Schema {
   @type("number") level: number;
   @type([PlayerState]) players: PlayerState[];
   @type([AsteroidState]) asteroids: AsteroidState[];
-  @type([ShipState]) ships: ShipState[];
 
   constructor(level: number = 1) {
     super();
     this.level = level;
-    this.ships = new ArraySchema<ShipState>(...new Array<ShipState>());
+    this.players = new ArraySchema<PlayerState>(...new Array<PlayerState>());
     this.asteroids = new ArraySchema<AsteroidState>(...new ArraySchema<AsteroidState>());
     this.generateAsteroids();
   }

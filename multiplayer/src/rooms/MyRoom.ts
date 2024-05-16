@@ -1,5 +1,5 @@
 import { Room, Client } from "@colyseus/core";
-import { GameState, ShipState, AsteroidState, XY, COMMON_PIXELS } from "./schema/MyRoomState";
+import { GameState, ShipState, AsteroidState, PlayerState, XY, COMMON_PIXELS } from "./schema/MyRoomState";
 
 export class MyRoom extends Room<GameState> {
   players: Map<string, number> = new Map<string, number>();
@@ -15,15 +15,20 @@ export class MyRoom extends Room<GameState> {
       let [x, y, rotation] = message;
       if (this.players.has(client.id)) {
         const index = this.players.get(client.id);
-        if (index < this.state.ships.length) {
-          this.state.ships[index].position = new XY(x, y);
-          this.state.ships[index].rotation = rotation;
+        if (index < this.state.players.length) {
+          this.state.players[index].ship.position = new XY(x, y);
+          this.state.players[index].ship.rotation = rotation;
         } else {
           this.players.delete(client.id);
         }
       } else {
-        this.state.ships.push(new ShipState(new XY(x, y), rotation));
-        this.players.set(client.id, this.state.ships.length - 1);
+        this.state.players.push(new PlayerState(client.id));
+        let index = this.state.players.length - 1;
+        this.players.set(client.id, index);
+        this.state.players[index].ship = new ShipState(new XY(x, y), rotation);
+
+        // this.state.ships.push(new ShipState(new XY(x, y), rotation));
+        // this.players.set(client.id, this.state.ships.length - 1);
       }
     });
 
@@ -32,9 +37,12 @@ export class MyRoom extends Room<GameState> {
 
       if (type === "asteroid") this.destoryAsteroid(index, x, y);
       else if (type === "ship") {
-        // this.state.players.splice(this.players.get(client.id), 1);
-        this.players.clear();
-        this.state.ships.splice(0, this.state.ships.length);
+        if (this.players.has(client.id)) {
+          let index = this.players.get(client.id);
+          this.state.players.splice(index, 1);
+        }
+        // this.players.clear();
+        // this.state.ships.splice(0, this.state.ships.length);
       }
     });
 
@@ -47,14 +55,13 @@ export class MyRoom extends Room<GameState> {
 
   onLeave(client: Client, consented: boolean) {
     console.log("##", client.sessionId, "LEFT!");
+
     if (this.players.has(client.id)) {
-      console.log(client.sessionId, "HAS INDEX!");
       const index = this.players.get(client.id);
       this.players.delete(client.id);
-      if (index < this.state.ships.length) {
-        console.log(client.sessionId, "HAS SLICE!");
 
-        this.state.ships.slice(index, 1);
+      if (index < this.state.players.length) {
+        this.state.players.slice(index, 1);
       }
     }
   }

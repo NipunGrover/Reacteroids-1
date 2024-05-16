@@ -1,11 +1,6 @@
 import Bullet from "./Bullet";
 import Particle from "./Particle";
-import {
-  rotatePoint,
-  randomNumBetween,
-  getCoordinates,
-  lerp,
-} from "../utils/functions";
+import { rotatePoint, randomNumBetween, getCoordinates, lerp } from "../utils/functions";
 
 let currentPosition = {
   x: 0,
@@ -18,15 +13,6 @@ export class Ship {
       x: getCoordinates(args.position.x, window.innerWidth),
       y: getCoordinates(args.position.y, window.innerHeight),
     };
-
-    // this.previousFramePosition = {
-    //   x: getCoordinates(args.position.x, window.innerWidth),
-    //   y: getCoordinates(args.position.y, window.innerHeight),
-    // };
-    // this.previousFramePosition = {
-    //   x: getCoordinates(args.position.x, window.innerWidth),
-    //   y: getCoordinates(args.position.y, window.innerHeight),
-    // };
     this.rotation = args.rotation;
     this.radius = 20;
     this.create = args.create;
@@ -36,18 +22,6 @@ export class Ship {
     // Draw
     const context = state.context;
     context.save();
-    //context.translate(this.position.x, this.position.y);
-    // // console.log(
-    // //   // context.getTransform().e,
-    // //   // context.getTransform().f,
-    // //   previousPosition.x,
-    // //   previousPosition.x != this.position.x ? this.position.x : "EQUAL"
-    // // );
-
-    // //Direction
-    // const dirX = this.position.x - previousPosition.x;
-    // const dirY = this.position.y - previousPosition.y;
-
     context.translate(this.position.x, this.position.y);
     context.rotate((this.rotation * Math.PI) / 180);
     context.strokeStyle = "#ffffff";
@@ -63,28 +37,17 @@ export class Ship {
     context.fill();
     context.stroke();
     context.restore();
-
-    // previousPosition = {
-    //   x: this.position.x,
-    //   y: this.position.y,
-    // };
   }
-  explode() {
-    this.delete = true;
-    this.onDie();
 
+  explode() {
     // Explode
     for (let i = 0; i < 60; i++) {
       const particle = new Particle({
         lifeSpan: randomNumBetween(60, 100),
         size: randomNumBetween(1, 4),
         position: {
-          x:
-            this.position.x +
-            randomNumBetween(-this.radius / 4, this.radius / 4),
-          y:
-            this.position.y +
-            randomNumBetween(-this.radius / 4, this.radius / 4),
+          x: this.position.x + randomNumBetween(-this.radius / 4, this.radius / 4),
+          y: this.position.y + randomNumBetween(-this.radius / 4, this.radius / 4),
         },
         velocity: {
           x: randomNumBetween(-1.5, 1.5),
@@ -134,11 +97,7 @@ export class PlayerShip extends Ship {
     this.velocity.y -= Math.cos((-this.rotation * Math.PI) / 180) * this.speed;
 
     // Thruster particles
-    let posDelta = rotatePoint(
-      { x: 0, y: -10 },
-      { x: 0, y: 0 },
-      ((this.rotation - 180) * Math.PI) / 180
-    );
+    let posDelta = rotatePoint({ x: 0, y: -10 }, { x: 0, y: 0 }, ((this.rotation - 180) * Math.PI) / 180);
     const particle = new Particle({
       lifeSpan: randomNumBetween(20, 40),
       size: randomNumBetween(1, 3),
