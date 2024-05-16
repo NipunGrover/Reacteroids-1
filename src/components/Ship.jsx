@@ -7,16 +7,26 @@ import {
   lerp,
 } from "../utils/functions";
 
+let currentPosition = {
+  x: 0,
+  y: 0,
+};
+
 export class Ship {
   constructor(args) {
     this.position = {
       x: getCoordinates(args.position.x, window.innerWidth),
       y: getCoordinates(args.position.y, window.innerHeight),
     };
-    this.previousFramePosition = {
-      x: getCoordinates(args.position.x, window.innerWidth),
-      y: getCoordinates(args.position.y, window.innerHeight),
-    };
+
+    // this.previousFramePosition = {
+    //   x: getCoordinates(args.position.x, window.innerWidth),
+    //   y: getCoordinates(args.position.y, window.innerHeight),
+    // };
+    // this.previousFramePosition = {
+    //   x: getCoordinates(args.position.x, window.innerWidth),
+    //   y: getCoordinates(args.position.y, window.innerHeight),
+    // };
     this.rotation = args.rotation;
     this.radius = 20;
     this.create = args.create;
@@ -26,12 +36,19 @@ export class Ship {
     // Draw
     const context = state.context;
     context.save();
-    context.translate(this.position.x, this.position.y);
+    //context.translate(this.position.x, this.position.y);
+    // // console.log(
+    // //   // context.getTransform().e,
+    // //   // context.getTransform().f,
+    // //   previousPosition.x,
+    // //   previousPosition.x != this.position.x ? this.position.x : "EQUAL"
+    // // );
 
-    // context.translate(
-    //   lerp(this.previousFramePosition.x, this.position.x, 0.25),
-    //   lerp(this.previousFramePosition.y, this.position.y, 0.25)
-    // );
+    // //Direction
+    // const dirX = this.position.x - previousPosition.x;
+    // const dirY = this.position.y - previousPosition.y;
+
+    context.translate(this.position.x, this.position.y);
     context.rotate((this.rotation * Math.PI) / 180);
     context.strokeStyle = "#ffffff";
     context.fillStyle = "#000000";
@@ -47,10 +64,10 @@ export class Ship {
     context.stroke();
     context.restore();
 
-    this.previousFramePosition = {
-      x: this.position.x,
-      y: this.position.y,
-    };
+    // previousPosition = {
+    //   x: this.position.x,
+    //   y: this.position.y,
+    // };
   }
   explode() {
     this.delete = true;

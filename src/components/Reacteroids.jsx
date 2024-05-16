@@ -1,7 +1,11 @@
 import React, { Component } from "react";
 import { Ship, PlayerShip } from "./Ship";
 import Asteroid from "./Asteroid";
-import { randomNumBetweenExcluding, sendCoordinates } from "../utils/functions";
+import {
+  lerp,
+  randomNumBetweenExcluding,
+  sendCoordinates,
+} from "../utils/functions";
 import { Client, Room } from "colyseus.js";
 import { GameState } from "../../multiplayer/src/rooms/schema/MyRoomState";
 
@@ -117,6 +121,7 @@ export class Reacteroids extends Component {
     if (this.room) {
       const serverX = sendCoordinates(ship.position.x, window.innerWidth);
       const serverY = sendCoordinates(ship.position.y, window.innerHeight);
+
       if (ship) {
         this.room.send("ship", [serverX, serverY, ship.rotation]);
       }
@@ -147,10 +152,11 @@ export class Reacteroids extends Component {
       .then((room) => {
         //console.log(room.sessionId, "joined", room.name);
         this.room = room;
+        this.generateShips(this.room.state.ships);
+
         this.room.onStateChange((newState) => {
           this.game_state = newState;
           this.generateShips(newState.ships);
-          //console.log(room.name, "has new state:", newState);
         });
       })
       .catch((e) => {
@@ -195,16 +201,16 @@ export class Reacteroids extends Component {
       localStorage["topscore"] = this.state.currentScore;
     }
   }
-
   generateShips(ships) {
     //Delete all but the first ship
     this.ship.splice(1, this.ship.length - 1);
-
     for (let i = 0; i < ships.length; i++) {
       let ship = new Ship({
         position: {
           x: ships[i].position.x,
           y: ships[i].position.y,
+          //  x: lerp(this.ship[i].position.x, ships[i].position.x, 0.25),
+          //   y: lerp(this.ship[i].position.y, ships[i].position.y, 0.25),
         },
         rotation: ships[i].rotation,
         create: this.createObject.bind(this),

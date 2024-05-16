@@ -39,6 +39,7 @@ export class MyRoom extends Room<GameState> {
 
     this.setSimulationInterval((deltaTime) => this.update(deltaTime));
   }
+
   update(deltaTime: number) {}
   onJoin(client: Client, options: any) {
     console.log(client.sessionId, "joined!");
@@ -46,9 +47,9 @@ export class MyRoom extends Room<GameState> {
 
   onLeave(client: Client, consented: boolean) {
     console.log(client.sessionId, "left!");
+
     if (this.players.has(client.id)) {
       console.log(client.sessionId, "HAS INDEX!");
-
       const index = this.players.get(client.id);
       this.players.delete(client.id);
       if (index < this.state.ships.length) {
