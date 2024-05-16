@@ -31,5 +31,9 @@ export function randomNumBetweenExcluding(min, max, exMin, exMax) {
 }
 
 export function getCoordinate(coord, resolution) {
+  return Math.round((coord * resolution) / COMMON_RESOLUTION);
+}
+
+export function sendCoordindate(coord, resolution) {
   return Math.round((coord * COMMON_RESOLUTION) / resolution);
 }

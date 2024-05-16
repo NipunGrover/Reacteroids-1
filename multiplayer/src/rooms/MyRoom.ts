@@ -47,8 +47,8 @@ export class MyRoom extends Room<GameState> {
       let asteroid: AsteroidState = this.state.asteroids[i];
       asteroid.rotation = (asteroid.rotation + asteroid.spin) % 360;
 
-      asteroid.position.x = asteroid.position.x + asteroid.speed.x < 0 ? COMMON_RESOLUTION - asteroid.position.x : (asteroid.position.x + asteroid.speed.x) % COMMON_RESOLUTION;
-      asteroid.position.y = asteroid.position.y + asteroid.speed.y < 0 ? COMMON_RESOLUTION - asteroid.position.y : (asteroid.position.y + asteroid.speed.y) % COMMON_RESOLUTION;
+      asteroid.position.x = asteroid.position.x + asteroid.speed.x < 0 ? COMMON_RESOLUTION - asteroid.position.x + asteroid.speed.x : (asteroid.position.x + asteroid.speed.x) % COMMON_RESOLUTION;
+      asteroid.position.y = asteroid.position.y + asteroid.speed.y < 0 ? COMMON_RESOLUTION - asteroid.position.y + asteroid.speed.y : (asteroid.position.y + asteroid.speed.y) % COMMON_RESOLUTION;
     }
   };
 

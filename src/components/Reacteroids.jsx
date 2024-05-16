@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import Ship from "./Ship";
 import Asteroid from "./Asteroid";
-import { getCoordinate } from "../utils/functions";
+import { getCoordinate, sendCoordindate } from "../utils/functions";
 import { GameState } from "../../multiplayer/src/rooms/schema/MyRoomState";
 import { Client, Room } from "colyseus.js";
 
@@ -23,22 +23,6 @@ export class Reacteroids extends Component {
   constructor() {
     super();
 
-    client
-      .joinOrCreate(GAME_ROOM, {})
-      .then((room) => {
-        console.log(room.sessionId, "joined", room.name);
-        this.room = room;
-        this.room.onStateChange((newState) => {
-          this.game_state = newState;
-        });
-        this.room.onMessage("message_type", (message) => {
-          console.log(room.sessionId, "received on", room.name, message);
-        });
-      })
-      .catch((e) => {
-        console.log("Join Error: ", e);
-        return null;
-      });
     this.state = {
       screen: {
         width: window.innerWidth,
@@ -53,7 +37,6 @@ export class Reacteroids extends Component {
         down: 0,
         space: 0,
       },
-      asteroidCount: 3,
       currentScore: 0,
       topScore: localStorage["topscore"] || 0,
       inGame: false,
@@ -103,7 +86,7 @@ export class Reacteroids extends Component {
     window.removeEventListener("resize", this.handleResize);
   }
 
-  update() {
+  async update() {
     const context = this.state.context;
     const keys = this.state.keys;
     const ship = this.ship[0];
@@ -150,7 +133,7 @@ export class Reacteroids extends Component {
     });
 
     client
-      .joinOrCreate("my_room", {}, GameState)
+      .joinOrCreate(GAME_ROOM, {}, GameState)
       .then((room) => {
         this.room = room;
         this.room.onStateChange((newState) => {
@@ -228,7 +211,9 @@ export class Reacteroids extends Component {
         var item1 = items1[a];
         var item2 = items2[b];
         if (this.checkCollision(item1, item2)) {
-          this.room.send("collision", ["asteroid", b, item2.position.x, item2.position.y]);
+          let posX = sendCoordindate(item2.position.x, window.innerWidth);
+          let posY = sendCoordindate(item2.position.y, window.innerWidth);
+          this.room.send("collision", ["asteroid", b, posX, posY]);
           item1.destroy();
           item2.destroy();
         }
