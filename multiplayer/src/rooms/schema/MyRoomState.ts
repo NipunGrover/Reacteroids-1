@@ -27,7 +27,7 @@ export class AsteroidState extends Schema {
   constructor(x: number, y: number, size: number, level: number) {
     super();
     this.position = new XY(x, y);
-    this.speed = randomSpeed(level);
+    this.speed = new XY(randomSpeed(level), randomSpeed(level));
     this.rotation = 0;
     this.size = size;
     this.spin = Math.random() * (Math.round(Math.random()) === 0 ? 3 : -3);
@@ -38,7 +38,7 @@ export class AsteroidState extends Schema {
 export class BulletState extends Schema {
   @type(XY) position: XY;
 
-  constructor (position: XY) {
+  constructor(position: XY) {
     super();
     this.position = position;
   }
@@ -62,7 +62,7 @@ export class PlayerState extends Schema {
   constructor(id: string) {
     super();
     this.id = id;
-    this.bullets = new ArraySchema<BulletState>(...(new Array<BulletState>));
+    this.bullets = new ArraySchema<BulletState>(...new Array<BulletState>());
   }
 }
 
@@ -88,11 +88,11 @@ export class GameState extends Schema {
 
 const randomCoordinate = (): number => Math.round(Math.random() * COMMON_PIXELS);
 
-const randomSpeed = (level: number): XY => {
+const randomSpeed = (level: number): number => {
   const limit = level;
   const dir = Math.round(Math.random()) === 0 ? 1 : -1;
   const speed = dir * Math.random() * limit;
-  return new XY(speed, speed);
+  return speed;
 };
 
 const asteroidVerticesXY = (count: number, radius: number): Array<XY> => {
