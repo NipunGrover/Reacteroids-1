@@ -245,8 +245,8 @@ export class Reacteroids extends Component {
         var item1 = items1[a];
         var item2 = items2[b];
         if (this.checkCollision(item1, item2)) {
-          let serverX = sendCoordindate(item2.position.x, window.innerWidth);
-          let serverY = sendCoordindate(item2.position.y, window.innerWidth);
+          let serverX = sendCoordinates(item2.position.x, window.innerWidth);
+          let serverY = sendCoordinates(item2.position.y, window.innerWidth);
           this.room.send("collision", ["asteroid", b, serverX, serverY]);
           item1.destroy();
           item2.destroy();

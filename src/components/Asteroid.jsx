@@ -40,22 +40,6 @@ export default class Asteroid {
       });
       this.create(particle, "particles");
     }
-
-    // Break into smaller asteroids
-    if (this.radius > 10) {
-      for (let i = 0; i < 2; i++) {
-        let asteroid = new Asteroid({
-          size: this.radius / 2,
-          position: {
-            x: randomNumBetween(-10, 20) + this.position.x,
-            y: randomNumBetween(-10, 20) + this.position.y,
-          },
-          create: this.create.bind(this),
-          addScore: this.addScore.bind(this),
-        });
-        this.create(asteroid, "asteroids");
-      }
-    }
   }
 
   render(state) {
