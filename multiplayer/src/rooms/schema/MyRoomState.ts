@@ -35,6 +35,15 @@ export class AsteroidState extends Schema {
   }
 }
 
+export class BulletState extends Schema {
+  @type(XY) position: XY;
+
+  constructor (position: XY) {
+    super();
+    this.position = position;
+  }
+}
+
 export class ShipState extends Schema {
   @type(XY) position: XY;
   @type("number") rotation: number;
@@ -49,10 +58,11 @@ export class ShipState extends Schema {
 export class PlayerState extends Schema {
   @type("string") id: string;
   @type(ShipState) ship: ShipState;
-
+  @type([BulletState]) bullets: BulletState[];
   constructor(id: string) {
     super();
     this.id = id;
+    this.bullets = new ArraySchema<BulletState>(...(new Array<BulletState>));
   }
 }
 

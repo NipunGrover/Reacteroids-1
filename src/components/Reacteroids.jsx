@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { Ship, PlayerShip } from "./Ship";
 import Asteroid from "./Asteroid";
+import { Bullet } from './Bullet';
 import { getCoordinates, sendCoordinates } from "../utils/functions";
 import { Client } from "colyseus.js";
 import { GameState } from "../../multiplayer/src/rooms/schema/MyRoomState";
@@ -45,6 +46,7 @@ export class Reacteroids extends Component {
     this.xships = [];
     this.asteroids = [];
     this.bullets = [];
+    this.xbullets = [];
     this.particles = [];
   }
 
@@ -109,13 +111,22 @@ export class Reacteroids extends Component {
     this.updateObjects(this.particles, "particles");
     this.updateObjects(this.asteroids, "asteroids");
     this.updateObjects(this.bullets, "bullets");
+    this.updateObjects(this.xbullets, 'xbullets');
     this.updateObjects(this.ship, "ship");
     this.updateObjects(this.xships, "xships");
+
+    var bulletPositions = [];
+    for (let b of this.bullets) {
+      const serverX = sendCoordinates(b.position.x, window.innerWidth);
+      const serverY = sendCoordinates(b.position.y, window.innerHeight);
+      bulletPositions.push({x: serverX, y: serverY});
+    }
 
     if (this.room && ship) {
       const serverX = sendCoordinates(ship.position.x, window.innerWidth);
       const serverY = sendCoordinates(ship.position.y, window.innerHeight);
       this.room.send("ship", [serverX, serverY, ship.rotation]);
+      if (bulletPositions.length > 0) { this.room.send("bullet", bulletPositions); }
     }
     context.restore();
 
@@ -147,6 +158,7 @@ export class Reacteroids extends Component {
           this.game_state = newState;
           this.generateShips(newState.players);
           this.generateAsteroids(newState.asteroids);
+          this.generateBullets(newState.players);
         });
       })
       .catch((e) => {
@@ -194,6 +206,7 @@ export class Reacteroids extends Component {
     // wipe all ghosts
     this.xships.splice(0, this.xships.length);
     for (let i = 0; i < players.length; i++) {
+  
       if (players[i].id != this.room.sessionId) {
         let ship = new Ship({
           position: {
@@ -217,6 +230,17 @@ export class Reacteroids extends Component {
         addScore: this.addScore.bind(this),
       });
       this.createObject(asteroid, "asteroids");
+    }
+  }
+
+  generateBullets (players) {
+    this.xbullets = [];
+    for (let i = 0; i < players.length; i++) {
+      if (players[i].id != this.room.sessionId) {
+        for (let j = 0; j < players[i].bullets.length; j++) {
+          this.createObject (new Bullet(players[i].bullets[j]), 'xbullets');
+        }
+      }
     }
   }
 
