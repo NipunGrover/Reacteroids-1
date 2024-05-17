@@ -152,11 +152,12 @@ export class Reacteroids extends Component {
       .then((room) => {
         //console.log(room.sessionId, "joined", room.name);
         this.room = room;
-        this.generateShips(this.room.state.ships);
 
         this.room.onStateChange((newState) => {
           this.game_state = newState;
           this.generateShips(newState.ships);
+
+          //this.generateShips(newState.ships);
         });
       })
       .catch((e) => {
@@ -173,7 +174,7 @@ export class Reacteroids extends Component {
       create: this.createObject.bind(this),
       onDie: this.gameOver.bind(this),
     });
-    this.ship = [];
+    //this.ship = [];
     this.createObject(ship, "ship");
 
     // Make asteroids
@@ -203,19 +204,41 @@ export class Reacteroids extends Component {
   }
   generateShips(ships) {
     //Delete all but the first ship
-    this.ship.splice(1, this.ship.length - 1);
-    for (let i = 0; i < ships.length; i++) {
-      let ship = new Ship({
-        position: {
-          x: ships[i].position.x,
-          y: ships[i].position.y,
-          //  x: lerp(this.ship[i].position.x, ships[i].position.x, 0.25),
-          //   y: lerp(this.ship[i].position.y, ships[i].position.y, 0.25),
-        },
-        rotation: ships[i].rotation,
-        create: this.createObject.bind(this),
-      });
-      this.createObject(ship, "ship");
+    //console.log(ships.length, this.ship.length - 1);
+
+    if (ships.length < this.ship.length) {
+      this.ship.splice(1, this.ship.length - 1);
+      for (let i = 1; i < ships.length; i++) {
+        let ship = new Ship({
+          position: {
+            x: ships[i].position.x,
+            y: ships[i].position.y,
+            //  x: lerp(this.ship[i].position.x, ships[i].position.x, 0.25),
+            //   y: lerp(this.ship[i].position.y, ships[i].position.y, 0.25),
+          },
+          rotation: ships[i].rotation,
+          create: this.createObject.bind(this),
+        });
+        this.createObject(ship, "ship");
+      }
+    } else {
+      console.log(this.ship);
+
+      for (let i = 1; i < ships.length; i++) {
+        this.ship[i].position.x = ships[i].position.x;
+        //  this.ship[i].position.y = ships[i].position.y;
+        // let ship = new Ship({
+        //   position: {
+        //     x: ships[i].position.x,
+        //     y: ships[i].position.y,
+        //     //  x: lerp(this.ship[i].position.x, ships[i].position.x, 0.25),
+        //     //   y: lerp(this.ship[i].position.y, ships[i].position.y, 0.25),
+        //   },
+        //   rotation: ships[i].rotation,
+        //   create: this.createObject.bind(this),
+        // });
+        // this.createObject(ship, "ship");
+      }
     }
   }
 
