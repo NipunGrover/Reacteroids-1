@@ -1,5 +1,5 @@
 import { Room, Client } from "@colyseus/core";
-import { GameState, ShipState, AsteroidState, PlayerState, XY, COMMON_PIXELS } from "./schema/MyRoomState";
+import { GameState, ShipState, BulletState, AsteroidState, PlayerState, XY, COMMON_PIXELS } from "./schema/MyRoomState";
 
 export class MyRoom extends Room<GameState> {
   players: Map<string, number> = new Map<string, number>();
@@ -45,6 +45,20 @@ export class MyRoom extends Room<GameState> {
         // this.state.ships.splice(0, this.state.ships.length);
       }
     });
+
+    this.onMessage("bullet", (client, message) => {
+      if (this.players.has(client.id)) {
+        let index = this.players.get(client.id);
+        let positions = message;
+        let bullets = this.state.players[index].bullets;
+
+        bullets.splice(0, bullets.length);
+        for (let i = 0; i < positions.length; i++) {
+          bullets.push (new BulletState(new XY(positions[i].x, positions[i].y)));
+        }
+      }
+    });
+
 
     this.setSimulationInterval(() => this.update());
   }

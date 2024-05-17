@@ -1,4 +1,4 @@
-import Bullet from "./Bullet";
+import {PlayerBullet} from "./Bullet";
 import Particle from "./Particle";
 import { rotatePoint, randomNumBetween, getCoordinates, lerp } from "../utils/functions";
 
@@ -130,7 +130,7 @@ export class PlayerShip extends Ship {
       this.rotate("RIGHT");
     }
     if (state.keys.space && Date.now() - this.lastShot > 300) {
-      const bullet = new Bullet({ ship: this });
+      const bullet = new PlayerBullet({ ship: this });
       this.create(bullet, "bullets");
       this.lastShot = Date.now();
     }
