@@ -61,3 +61,25 @@ export function sendCoordinates(localCoordinate, localResolution) {
 export function lerp(start, end, t) {
   return start * (1 - t) + end * t;
 }
+
+// generate colour value from session ID to distinguish players online
+// converting 9-character room code to bright hex colours is hard
+export function getSessionColour(id) {
+  // Assert Colyseus ID value is 9 characters long
+  if (id.length === 9) {
+    let colour = "#";
+
+    let r = 0xFF-(id.charCodeAt(0) + id.charCodeAt(1) + id.charCodeAt(2));
+    if (0 > r) { r += 0xFF; }
+    let g = 0xFF-(id.charCodeAt(3) + id.charCodeAt(4) + id.charCodeAt(5));
+    if (0 > g) { g += 0xFF; }
+    let b = 0xFF-(id.charCodeAt(6) + id.charCodeAt(7) + id.charCodeAt(8));
+    if (0 > b) { b += 0xFF; }
+
+    // see if this gets treated as a string
+    return colour + r.toString(16) + g.toString(16) + b.toString(16);
+  } else {
+    console.log ("Unexpected ID length");
+    return "#FFFFFF";
+  }
+}

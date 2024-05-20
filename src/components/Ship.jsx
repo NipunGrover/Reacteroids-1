@@ -16,6 +16,7 @@ export class Ship {
     this.rotation = args.rotation;
     this.radius = 20;
     this.create = args.create;
+    this.colour = args.colour;
   }
 
   draw_ship(state, colour) {
@@ -24,7 +25,7 @@ export class Ship {
     context.save();
     context.translate(this.position.x, this.position.y);
     context.rotate((this.rotation * Math.PI) / 180);
-    context.strokeStyle = "#ffffff";
+    context.strokeStyle = colour;
     context.fillStyle = "#000000";
     context.lineWidth = 2;
     context.beginPath();
@@ -64,7 +65,7 @@ export class Ship {
 
   render(state) {
     // console.log("rendering npc ship");
-    this.draw_ship(state, "#dddddd");
+    this.draw_ship(state, this.colour);
   }
 }
 
@@ -109,6 +110,7 @@ export class PlayerShip extends Ship {
         x: posDelta.x / randomNumBetween(3, 5),
         y: posDelta.y / randomNumBetween(3, 5),
       },
+      colour: this.colour
     });
     this.create(particle, "particles");
   }
@@ -119,6 +121,9 @@ export class PlayerShip extends Ship {
   }
 
   render(state) {
+    // render colour trail version of ship
+    super.render(state);
+
     // Controls
     if (state.keys.up) {
       this.accelerate(1);
@@ -155,6 +160,6 @@ export class PlayerShip extends Ship {
     if (this.position.y > state.screen.height) this.position.y = 0;
     else if (this.position.y < 0) this.position.y = state.screen.height;
 
-    this.draw_ship(state, "#FFFFF");
+    this.draw_ship(state, "#FFFFFF");
   }
 }
