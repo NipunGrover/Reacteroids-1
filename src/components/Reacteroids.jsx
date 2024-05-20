@@ -156,7 +156,6 @@ export class Reacteroids extends Component {
       .joinOrCreate(GAME_ROOM, {}, GameState)
       .then((room) => {
         this.room = room;
-        console.log(getSessionColour(this.room.sessionId));
         this.room.onStateChange((newState) => {
           this.game_state = newState;
           this.generateShips(newState.players);
