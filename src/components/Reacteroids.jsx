@@ -181,7 +181,7 @@ export class Reacteroids extends Component {
       onDie: this.gameOver.bind(this),
       colour: "#FF0FFF"
     });
-    this.ship = [];
+    this.ship.splice(0, this.ship.length);
     this.createObject(ship, "ship");
   }
 
@@ -229,7 +229,7 @@ export class Reacteroids extends Component {
   }
 
   generateAsteroids(asteroids) {
-    this.asteroids = [];
+    this.asteroids.splice(0, this.asteroids.length);
     for (let i = 0; i < asteroids.length; i++) {
       let asteroid = new Asteroid({
         stats: asteroids[i],
@@ -241,7 +241,7 @@ export class Reacteroids extends Component {
   }
 
   generateBullets (players) {
-    this.xbullets = [];
+    this.xbullets.splice(0, this.xbullets.length);
     for (let i = 0; i < players.length; i++) {
       if (players[i].id != this.room.sessionId) {
         let bulletColour = getSessionColour(players[i].id);
