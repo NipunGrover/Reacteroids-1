@@ -1,4 +1,4 @@
-import { rotatePoint, getCoordinates } from '../utils/functions';
+import { rotatePoint, getCoordinates, sendCoordinates } from '../utils/functions';
 
 export class Bullet {
   constructor(args) {
@@ -7,6 +7,7 @@ export class Bullet {
         x: getCoordinates(args.position.x, window.innerWidth),
         y: getCoordinates(args.position.y, window.innerHeight)
       };
+      this.colour = args.colour;
     }
     this.radius = 2;
   }
@@ -15,13 +16,13 @@ export class Bullet {
     this.delete = true;
   }
 
-  drawBullet(state) {
+  drawBullet(state, colour) {
 
     const context = state.context;
     context.save();
     context.translate(this.position.x, this.position.y);
     context.rotate(this.rotation * Math.PI / 180);
-    context.fillStyle = '#fff';
+    context.fillStyle = colour;
     context.lineWidth = 0,5;
     context.beginPath();
     context.arc(0, 0, 2, 0, 2 * Math.PI);
@@ -31,18 +32,20 @@ export class Bullet {
   }
     
   render(state){
-    this.drawBullet(state);
+    this.drawBullet(state, this.colour);
   }
 }
+
 export class PlayerBullet extends Bullet {
   constructor(args) {
-
     let posDelta = rotatePoint({x:0, y:-20}, {x:0,y:0}, args.ship.rotation * Math.PI / 180);
 
-    super ();
-    this.position = {
-      x: args.ship.position.x + posDelta.x,
-      y: args.ship.position.y + posDelta.y}
+    super ({position:{
+        x: sendCoordinates(args.ship.position.x, window.innerWidth),
+        y: sendCoordinates(args.ship.position.y, window.innerHeight)
+      },
+      colour: args.ship.colour
+    });
     this.rotation = args.ship.rotation;
     this.velocity = {
       x:posDelta.x / 2,
@@ -56,6 +59,7 @@ export class PlayerBullet extends Bullet {
   }
   
   render(state){
+    super.render(state);
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
 
@@ -66,6 +70,6 @@ export class PlayerBullet extends Bullet {
         this.destroy();
     }
 
-    this.drawBullet(state);
+    this.drawBullet(state, "#FFFFFF");
   }
 }

@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { Ship, PlayerShip } from "./Ship";
 import Asteroid from "./Asteroid";
 import { Bullet } from './Bullet';
-import { getCoordinates, sendCoordinates } from "../utils/functions";
+import { sendCoordinates, getSessionColour } from "../utils/functions";
 import { Client } from "colyseus.js";
 import { GameState } from "../../multiplayer/src/rooms/schema/MyRoomState";
 
@@ -108,12 +108,14 @@ export class Reacteroids extends Component {
     this.checkCollisionsWithShip(this.ship, this.asteroids);
 
     // Remove or render
-    this.updateObjects(this.particles, "particles");
+    // draw NPC images before player images, so they don't obscure
+    // draw particles last so they don't get covered over
     this.updateObjects(this.asteroids, "asteroids");
-    this.updateObjects(this.bullets, "bullets");
-    this.updateObjects(this.xbullets, 'xbullets');
-    this.updateObjects(this.ship, "ship");
+    this.updateObjects(this.xbullets, "xbullets");
     this.updateObjects(this.xships, "xships");
+    this.updateObjects(this.bullets, "bullets");
+    this.updateObjects(this.ship, "ship");
+    this.updateObjects(this.particles, "particles");
 
     var bulletPositions = [];
     for (let b of this.bullets) {
@@ -167,6 +169,8 @@ export class Reacteroids extends Component {
       });
 
     // Make ship
+    // we don't have this.room available while we do this!
+    // could delay setting ship trail colour
     let ship = new PlayerShip({
       position: {
         x: 512,
@@ -175,6 +179,7 @@ export class Reacteroids extends Component {
       rotation: 0,
       create: this.createObject.bind(this),
       onDie: this.gameOver.bind(this),
+      colour: "#FF0FFF"
     });
     this.ship.splice(0, this.ship.length);
     this.createObject(ship, "ship");
@@ -208,6 +213,7 @@ export class Reacteroids extends Component {
     for (let i = 0; i < players.length; i++) {
   
       if (players[i].id != this.room.sessionId) {
+        let shipColour = getSessionColour(players[i].id);
         let ship = new Ship({
           position: {
             x: players[i].ship.position.x,
@@ -215,6 +221,7 @@ export class Reacteroids extends Component {
           },
           rotation: players[i].ship.rotation,
           create: this.createObject.bind(this), // for creating particles
+          colour: shipColour
         });
         this.createObject(ship, "xships");
       }
@@ -237,7 +244,10 @@ export class Reacteroids extends Component {
     this.xbullets.splice(0, this.xbullets.length);
     for (let i = 0; i < players.length; i++) {
       if (players[i].id != this.room.sessionId) {
+        let bulletColour = getSessionColour(players[i].id);
         for (let j = 0; j < players[i].bullets.length; j++) {
+          let args = players[i].bullets[j];
+          args.colour = bulletColour; // insert colour
           this.createObject (new Bullet(players[i].bullets[j]), 'xbullets');
         }
       }
