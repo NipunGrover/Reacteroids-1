@@ -35,14 +35,19 @@ export class MyRoom extends Room<GameState> {
     this.onMessage("collision", (client, message) => {
       const [type, index, x, y] = message;
 
-      if (type === "asteroid") this.destoryAsteroid(index, x, y);
-      else if (type === "ship") {
-        if (this.players.has(client.id)) {
+      if (type === "asteroid") {
+        this.destoryAsteroid(index, x, y);
+      } else if (type === "ship") {
+        if (this.players.size === this.state.players.length && 
+            this.players.has(client.id)) {
           let index = this.players.get(client.id);
           this.state.players.splice(index, 1);
+        } else {
+          // wipe out all players if things go strange, they can repopulate next frame
+          this.players.clear();
+          this.state.players.splice(0, this.state.players.length);
+
         }
-        // this.players.clear();
-        // this.state.ships.splice(0, this.state.ships.length);
       }
     });
 
@@ -65,6 +70,7 @@ export class MyRoom extends Room<GameState> {
 
   onJoin(client: Client, options: any) {
     console.log("##", client.sessionId, "JOINED!");
+    console.log("Player count", this.players.size, this.state.players.length);
   }
 
   onLeave(client: Client, consented: boolean) {
