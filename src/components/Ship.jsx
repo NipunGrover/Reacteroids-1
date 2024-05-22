@@ -2,6 +2,9 @@ import {PlayerBullet} from "./Bullet";
 import Particle from "./Particle";
 import { rotatePoint, randomNumBetween, getCoordinates, lerp } from "../utils/functions";
 
+export const OK = 0;
+export const GHOST = 1;
+
 let currentPosition = {
   x: 0,
   y: 0,
@@ -82,6 +85,8 @@ export class PlayerShip extends Ship {
     this.radius = 20;
     this.lastShot = 0;
     this.onDie = args.onDie;
+    this.mode = GHOST;
+    window.setTimeout(() => {this.mode = OK;}, 1000);
   }
 
   rotate(dir) {
@@ -116,8 +121,8 @@ export class PlayerShip extends Ship {
   }
 
   destroy() {
-    this.onDie();
-    this.explode();
+      this.onDie();
+      this.explode();
   }
 
   render(state) {
@@ -160,6 +165,7 @@ export class PlayerShip extends Ship {
     if (this.position.y > state.screen.height) this.position.y = 0;
     else if (this.position.y < 0) this.position.y = state.screen.height;
 
-    this.draw_ship(state, "#FFFFFF");
+    let drawColour = (this.mode == GHOST)? "#7F7F7F" : "#FFFFFF";
+    this.draw_ship(state, drawColour);
   }
 }
