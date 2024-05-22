@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Ship, PlayerShip } from "./Ship";
+import { Ship, PlayerShip, GHOST } from "./Ship";
 import Asteroid from "./Asteroid";
 import { Bullet } from './Bullet';
 import { sendCoordinates, getSessionColour } from "../utils/functions";
@@ -106,6 +106,7 @@ export class Reacteroids extends Component {
     // Check for colisions
     this.checkCollisionsWith(this.bullets, this.asteroids);
     this.checkCollisionsWithShip(this.ship, this.asteroids);
+    this.checkCollisionsWithShip(this.ship, this.xbullets);
 
     // Remove or render
     // draw NPC images before player images, so they don't obscure
@@ -260,7 +261,6 @@ export class Reacteroids extends Component {
 
   updateObjects(items, group) {
     for (let index = items.length; index > 0; ) {
-      //  console.log(items[index], index);
       index--;
       if (items[index].delete) {
         this[group].splice(index, 1);
@@ -293,14 +293,18 @@ export class Reacteroids extends Component {
     var a = items1.length - 1;
     var b;
     for (a; a > -1; --a) {
-      b = items2.length - 1;
-      for (b; b > -1; --b) {
-        var item1 = items1[a];
-        var item2 = items2[b];
-        if (this.checkCollision(item1, item2)) {
-          item1.destroy();
-          if (a === 0) {
-            this.gameOver();
+      // skip collision if ship is a ghost
+      if (items1[a].mode === GHOST) {
+      } else {
+        b = items2.length - 1;
+        for (b; b > -1; --b) {
+          var item1 = items1[a];
+          var item2 = items2[b];
+          if (this.checkCollision(item1, item2)) {
+            item1.destroy();
+            if (a === 0) {
+              this.gameOver();
+            }
           }
         }
       }
