@@ -6,6 +6,10 @@ import { sendCoordinates, getSessionColour } from "../utils/functions";
 import { Client } from "colyseus.js";
 import { GameState } from "../../multiplayer/src/rooms/schema/MyRoomState";
 
+// are asteroids a hazard?
+const SAFE = 1;
+const DANGER = 0;
+
 const COLYSEUS_HOST = "ws://localhost:2567";
 const GAME_ROOM = "my_room";
 const client = new Client(COLYSEUS_HOST);
@@ -48,6 +52,10 @@ export class Reacteroids extends Component {
     this.bullets = [];
     this.xbullets = [];
     this.particles = [];
+
+    // track level changes and give a couple seconds' invincibility
+    this.level = 0;
+    this.mode = DANGER;
   }
 
   handleResize(value, e) {
@@ -104,8 +112,10 @@ export class Reacteroids extends Component {
     context.globalAlpha = 1;
 
     // Check for colisions
-    this.checkCollisionsWith(this.bullets, this.asteroids);
-    this.checkCollisionsWithShip(this.ship, this.asteroids);
+    if (this.mode === DANGER) {
+      this.checkCollisionsWith(this.bullets, this.asteroids);
+      this.checkCollisionsWithShip(this.ship, this.asteroids);
+    }
     this.checkCollisionsWithShip(this.ship, this.xbullets);
 
     // Remove or render
@@ -159,6 +169,17 @@ export class Reacteroids extends Component {
         this.room = room;
         this.room.onStateChange((newState) => {
           this.game_state = newState;
+
+          // detect server going up a difficulty level and impose a safe period
+          if (newState.level > this.level) {
+            console.log("Level", newState.level);
+            this.level = newState.level;
+            // turn off asteroid collisions
+            this.mode = SAFE;
+            // you have three seconds to comply
+            window.setTimeout(() => {this.mode = DANGER;}, 3000);
+          }
+
           this.generateShips(newState.players);
           this.generateAsteroids(newState.asteroids);
           this.generateBullets(newState.players);
@@ -236,6 +257,7 @@ export class Reacteroids extends Component {
         stats: asteroids[i],
         create: this.createObject.bind(this),
         addScore: this.addScore.bind(this),
+        colour: (this.mode === SAFE)? "#7F7F7F": "#FFFFFF"
       });
       this.createObject(asteroid, "asteroids");
     }
