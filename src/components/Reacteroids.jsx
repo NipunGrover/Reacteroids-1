@@ -14,6 +14,18 @@ const COLYSEUS_HOST = "ws://localhost:2567";
 const GAME_ROOM = "my_room";
 const client = new Client(COLYSEUS_HOST);
 
+// weed out minimal controller inputs
+const AXIS_DEAD_ZONE = 0.1;
+
+// gamepad axis parameters for flightstick
+const FLIGHT_AXIS = {
+  AXIS_ROLL: 0,
+  AXIS_PITCH: 1,
+  AXIS_YAW: 5,
+  AXIS_HAT: 9
+  // HAT emits a constant value for neutral, up, down, left, right
+}
+
 const KEY = {
   LEFT: 37,
   RIGHT: 39,
@@ -85,6 +97,21 @@ export class Reacteroids extends Component {
     window.addEventListener("keydown", this.handleKeys.bind(this, true));
     window.addEventListener("resize", this.handleResize.bind(this, false));
 
+    // 1. check if gamepad has enough input axes to control the ship
+    // 2. remember the controller index number
+    // 3. compare controller ID value so we know which axes to map to which functions
+    // 4. set input functions on Ship to call navigator.getGamepads and get axis values
+    window.addEventListener("gamepadconnected", (e) => {
+      this.controllerInput = navigator.getGamepads();
+      console.log(
+        "Gamepad connected at index %d: %s. %d buttons, %d axes.",
+        e.gamepad.index,
+        e.gamepad.id,
+        e.gamepad.buttons.length,
+        e.gamepad.axes.length,
+      );
+    });
+
     const context = this.refs.canvas.getContext("2d");
     this.setState({ context: context });
 
@@ -101,6 +128,22 @@ export class Reacteroids extends Component {
     const context = this.state.context;
     const keys = this.state.keys;
     const ship = this.ship[0];
+
+    let gamepads = navigator.getGamepads();
+    console.log(gamepads);
+    if (gamepads) {
+      for (let i = 0; i < gamepads.length; i++) {
+        if (gamepads[i] && gamepads[i].axes) {
+          for (let j = 0; j < gamepads[i].axes.length; j++) {
+            let diff = gamepads[i].axes[j];
+            if (Math.abs(diff) > AXIS_DEAD_ZONE) {
+              console.log ("gamepad", i, "axis", j, diff);
+            }
+          }
+        }
+      }
+      this.controllerInput = gamepads;
+    }
 
     context.save();
     context.scale(this.state.screen.ratio, this.state.screen.ratio);
