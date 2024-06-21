@@ -6,6 +6,21 @@ import { COMMON_PIXELS } from "../../multiplayer/src/rooms/schema/MyRoomState";
  * @param {Number} angle    Angle in radians
  */
 
+// weed out minimal controller inputs
+export const AXIS_DEAD_ZONE = 0.1;
+
+export const FLIGHTSTICK_AXIS_NUM = 10;
+export const FLIGHTSTICK_FIRE_BUTTON = 0;
+
+// gamepad axis parameters for flightstick
+export const FLIGHTSTICK_AXIS = {
+  AXIS_ROLL: 0,
+  AXIS_PITCH: 1,
+  AXIS_YAW: 5,
+  AXIS_HAT: 9
+  // HAT emits a constant value for neutral, up, down, left, right
+}
+
 export function asteroidVertices(count, rad) {
   let p = [];
   for (let i = 0; i < count; i++) {

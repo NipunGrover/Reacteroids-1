@@ -1,6 +1,8 @@
 import {PlayerBullet} from "./Bullet";
 import Particle from "./Particle";
-import { rotatePoint, randomNumBetween, getCoordinates, lerp } from "../utils/functions";
+import { rotatePoint, randomNumBetween, getCoordinates, 
+         AXIS_DEAD_ZONE, FLIGHTSTICK_AXIS, FLIGHTSTICK_FIRE_BUTTON
+ } from "../utils/functions";
 
 export const OK = 0;
 export const GHOST = 1;
@@ -87,20 +89,28 @@ export class PlayerShip extends Ship {
     this.onDie = args.onDie;
     this.mode = GHOST;
     window.setTimeout(() => {this.mode = OK;}, 1000);
+
+    this.controllerNumber = args.controllerNumber;
   }
 
-  rotate(dir) {
-    if (dir == "LEFT") {
-      this.rotation -= this.rotationSpeed;
-    }
-    if (dir == "RIGHT") {
-      this.rotation += this.rotationSpeed;
+  rotate(val) {
+    if (Math.abs(val) < AXIS_DEAD_ZONE) return;
+    this.rotation += this.rotationSpeed * val;
+  }
+
+  shoot() {
+    if (Date.now() - this.lastShot > 300) {
+      const bullet = new PlayerBullet({ ship: this });
+      this.create(bullet, "bullets");
+      this.lastShot = Date.now();
     }
   }
 
   accelerate(val) {
-    this.velocity.x -= Math.sin((-this.rotation * Math.PI) / 180) * this.speed;
-    this.velocity.y -= Math.cos((-this.rotation * Math.PI) / 180) * this.speed;
+    if (val <= AXIS_DEAD_ZONE) return;
+
+    this.velocity.x -= Math.sin((-this.rotation * Math.PI) / 180) * val * this.speed;
+    this.velocity.y -= Math.cos((-this.rotation * Math.PI) / 180) * val * this.speed;
 
     // Thruster particles
     let posDelta = rotatePoint({ x: 0, y: -10 }, { x: 0, y: 0 }, ((this.rotation - 180) * Math.PI) / 180);
@@ -130,19 +140,29 @@ export class PlayerShip extends Ship {
     super.render(state);
 
     // Controls
-    if (state.keys.up) {
-      this.accelerate(1);
-    }
-    if (state.keys.left) {
-      this.rotate("LEFT");
-    }
-    if (state.keys.right) {
-      this.rotate("RIGHT");
-    }
-    if (state.keys.space && Date.now() - this.lastShot > 300) {
-      const bullet = new PlayerBullet({ ship: this });
-      this.create(bullet, "bullets");
-      this.lastShot = Date.now();
+    if (this.controllerNumber < 0) {
+      if (state.keys.up) {
+        this.accelerate(1);
+      }
+      if (state.keys.left) {
+        this.rotate(-this.rotationSpeed);
+      }
+      if (state.keys.right) {
+        this.rotate(this.rotationSpeed);
+      }
+      if (state.keys.space) {
+        this.shoot();
+      }
+    } else {
+      let controls = navigator.getGamepads();
+      let input = controls[this.controllerNumber];
+      let thrust = input.axes[FLIGHTSTICK_AXIS.AXIS_PITCH];
+      let turn = input.axes[FLIGHTSTICK_AXIS.AXIS_ROLL] + input.axes[FLIGHTSTICK_AXIS.AXIS_YAW];
+      this.accelerate(-thrust);
+      this.rotate(turn);
+      if (input.buttons[FLIGHTSTICK_FIRE_BUTTON].value > AXIS_DEAD_ZONE) {
+        this.shoot();
+      }
     }
 
     // Move
