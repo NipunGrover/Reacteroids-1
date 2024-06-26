@@ -14,14 +14,16 @@ export const FLIGHTSTICK_AXIS_NUM = 10;
 export const FLIGHTSTICK_BUTTONS = {
   FIRE: 0,
   THRUST: 1,
+  THRUST_ALT: 4,
 }
 
 // gamepad axis parameters for flightstick
 export const FLIGHTSTICK_AXIS = {
-  AXIS_ROLL: 0,
-  AXIS_PITCH: 1,
-  AXIS_YAW: 5,
-  AXIS_HAT: 9
+  ROLL: 0,
+  PITCH: 1,
+  THROTTLE: 2,
+  YAW: 5,
+  HAT: 9
   // HAT emits a constant value for neutral, up, down, left, right
 }
 

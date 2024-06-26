@@ -6,8 +6,9 @@ import { rotatePoint, randomNumBetween, getCoordinates,
 
 export const OK = 0;
 export const GHOST = 1;
-export const LEFT = -1;
-export const RIGHT = 1;
+const LEFT = -1;
+const RIGHT = 1;
+const FULL_THRUST = 1;
 
 let currentPosition = {
   x: 0,
@@ -144,7 +145,7 @@ export class PlayerShip extends Ship {
     // Controls
     if (this.controllerNumber < 0) {
       if (state.keys.up) {
-        this.accelerate(1);
+        this.accelerate(FULL_THRUST);
       }
       if (state.keys.left) {
         this.rotate(LEFT);
@@ -158,19 +159,40 @@ export class PlayerShip extends Ship {
     } else {
       let controls = navigator.getGamepads();
       let input = controls[this.controllerNumber];
-      let thrust = input.axes[FLIGHTSTICK_AXIS.AXIS_PITCH];
-      let turn = input.axes[FLIGHTSTICK_AXIS.AXIS_ROLL] + input.axes[FLIGHTSTICK_AXIS.AXIS_YAW];
-      this.accelerate(-thrust);
+      let thrust = 0;
+      let turn = input.axes[FLIGHTSTICK_AXIS.ROLL] + input.axes[FLIGHTSTICK_AXIS.YAW];
+
+      if (Math.abs(input.axes[FLIGHTSTICK_AXIS.THROTTLE]) > AXIS_DEAD_ZONE) {
+        thrust = -input.axes[FLIGHTSTICK_AXIS.THROTTLE];
+      } else if (-input.axes[FLIGHTSTICK_AXIS.PITCH] > AXIS_DEAD_ZONE) {
+        thrust = -input.axes[FLIGHTSTICK_AXIS.PITCH];
+      }
+      this.accelerate(thrust);
       this.rotate(turn);
 
-      if (input.buttons[FLIGHTSTICK_BUTTONS.THRUST].value > AXIS_DEAD_ZONE) {
+      // overboost
+      if (input.buttons[FLIGHTSTICK_BUTTONS.THRUST].value ||
+          input.buttons[FLIGHTSTICK_BUTTONS.THRUST_ALT].value) {
         // spoilers: the value is 1
-        this.accelerate(input.buttons[FLIGHTSTICK_BUTTONS.THRUST].value); 
+        this.accelerate(FULL_THRUST); 
       }
 
       if (input.buttons[FLIGHTSTICK_BUTTONS.FIRE].value > AXIS_DEAD_ZONE) {
         this.shoot();
       }
+/*
+      // log controller inputs to console for figuring out what they are
+      for (let a = 0; a < input.axes.length; a++) {
+        if (a == 6 || a == 9) continue; // always on
+        if (Math.abs(input.axes[a]) > AXIS_DEAD_ZONE) console.log ("Axis", a);
+      }
+
+      for (let b = 0; b < input.buttons.length; b++) {
+        if (b == 23) continue;
+        if (input.buttons[b].value > AXIS_DEAD_ZONE) console.log ("Button", b);
+
+      }
+*/
     }
 
     // Move
