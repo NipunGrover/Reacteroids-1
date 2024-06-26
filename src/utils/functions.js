@@ -10,7 +10,11 @@ import { COMMON_PIXELS } from "../../multiplayer/src/rooms/schema/MyRoomState";
 export const AXIS_DEAD_ZONE = 0.1;
 
 export const FLIGHTSTICK_AXIS_NUM = 10;
-export const FLIGHTSTICK_FIRE_BUTTON = 0;
+
+export const FLIGHTSTICK_BUTTONS = {
+  FIRE: 0,
+  THRUST: 1,
+}
 
 // gamepad axis parameters for flightstick
 export const FLIGHTSTICK_AXIS = {

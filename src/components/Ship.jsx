@@ -1,11 +1,13 @@
 import {PlayerBullet} from "./Bullet";
 import Particle from "./Particle";
 import { rotatePoint, randomNumBetween, getCoordinates, 
-         AXIS_DEAD_ZONE, FLIGHTSTICK_AXIS, FLIGHTSTICK_FIRE_BUTTON
+         AXIS_DEAD_ZONE, FLIGHTSTICK_AXIS, FLIGHTSTICK_BUTTONS
  } from "../utils/functions";
 
 export const OK = 0;
 export const GHOST = 1;
+export const LEFT = -1;
+export const RIGHT = 1;
 
 let currentPosition = {
   x: 0,
@@ -145,10 +147,10 @@ export class PlayerShip extends Ship {
         this.accelerate(1);
       }
       if (state.keys.left) {
-        this.rotate(-this.rotationSpeed);
+        this.rotate(LEFT);
       }
       if (state.keys.right) {
-        this.rotate(this.rotationSpeed);
+        this.rotate(RIGHT);
       }
       if (state.keys.space) {
         this.shoot();
@@ -160,7 +162,13 @@ export class PlayerShip extends Ship {
       let turn = input.axes[FLIGHTSTICK_AXIS.AXIS_ROLL] + input.axes[FLIGHTSTICK_AXIS.AXIS_YAW];
       this.accelerate(-thrust);
       this.rotate(turn);
-      if (input.buttons[FLIGHTSTICK_FIRE_BUTTON].value > AXIS_DEAD_ZONE) {
+
+      if (input.buttons[FLIGHTSTICK_BUTTONS.THRUST].value > AXIS_DEAD_ZONE) {
+        // spoilers: the value is 1
+        this.accelerate(input.buttons[FLIGHTSTICK_BUTTONS.THRUST].value); 
+      }
+
+      if (input.buttons[FLIGHTSTICK_BUTTONS.FIRE].value > AXIS_DEAD_ZONE) {
         this.shoot();
       }
     }
