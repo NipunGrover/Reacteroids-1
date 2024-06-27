@@ -154,7 +154,7 @@ export class PlayerShip extends Ship {
         this.rotate(RIGHT);
       }
       if (state.keys.space) {
-        this.shoot(state.micVolume * 10);
+        this.shoot(state.micVolume * state.micVolume * 100);
       }
     } else {
       let controls = navigator.getGamepads();
@@ -178,7 +178,7 @@ export class PlayerShip extends Ship {
       }
 
       if (input.buttons[FLIGHTSTICK_BUTTONS.FIRE].value > AXIS_DEAD_ZONE) {
-        this.shoot(state.micVolume * 10);
+        this.shoot(state.micVolume * state.micVolume * 100);
       }
 /*
       // log controller inputs to console for figuring out what they are

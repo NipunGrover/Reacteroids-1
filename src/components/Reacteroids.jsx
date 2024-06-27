@@ -178,7 +178,7 @@ export class Reacteroids extends Component {
     for (let b of this.bullets) {
       const serverX = sendCoordinates(b.position.x, window.innerWidth);
       const serverY = sendCoordinates(b.position.y, window.innerHeight);
-      bulletPositions.push({x: serverX, y: serverY});
+      bulletPositions.push({x: serverX, y: serverY, r: b.radius});
     }
 
     if (this.room && ship) {

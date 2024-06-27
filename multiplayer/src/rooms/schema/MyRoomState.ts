@@ -37,10 +37,12 @@ export class AsteroidState extends Schema {
 
 export class BulletState extends Schema {
   @type(XY) position: XY;
+  @type("number") size: number;
 
-  constructor(position: XY) {
+  constructor(position: XY, r: number) {
     super();
     this.position = position;
+    this.size = r;
   }
 }
 
@@ -89,7 +91,7 @@ export class GameState extends Schema {
 const randomCoordinate = (): number => Math.round(Math.random() * COMMON_PIXELS);
 
 const randomSpeed = (level: number): number => {
-  const limit = level;
+  const limit = 1 + (level/8); // tweak this so it's not insane
   const dir = Math.round(Math.random()) === 0 ? 1 : -1;
   const speed = dir * Math.random() * limit;
   return speed;
