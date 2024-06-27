@@ -101,9 +101,9 @@ export class PlayerShip extends Ship {
     this.rotation += this.rotationSpeed * val;
   }
 
-  shoot() {
+  shoot(val) {
     if (Date.now() - this.lastShot > 300) {
-      const bullet = new PlayerBullet({ ship: this });
+      const bullet = new PlayerBullet({ ship: this, size: val });
       this.create(bullet, "bullets");
       this.lastShot = Date.now();
     }
@@ -154,7 +154,7 @@ export class PlayerShip extends Ship {
         this.rotate(RIGHT);
       }
       if (state.keys.space) {
-        this.shoot();
+        this.shoot(state.micVolume * 10);
       }
     } else {
       let controls = navigator.getGamepads();
@@ -178,7 +178,7 @@ export class PlayerShip extends Ship {
       }
 
       if (input.buttons[FLIGHTSTICK_BUTTONS.FIRE].value > AXIS_DEAD_ZONE) {
-        this.shoot();
+        this.shoot(state.micVolume * 10);
       }
 /*
       // log controller inputs to console for figuring out what they are

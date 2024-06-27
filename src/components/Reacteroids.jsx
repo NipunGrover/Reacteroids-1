@@ -14,6 +14,14 @@ const COLYSEUS_HOST = "ws://localhost:2567";
 const GAME_ROOM = "my_room";
 const client = new Client(COLYSEUS_HOST);
 
+// stuff for microphone access
+const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+const audioContext = new AudioContext();
+const mediaStreamAudioSourceNode = audioContext.createMediaStreamSource(stream);
+const analyserNode = audioContext.createAnalyser();
+mediaStreamAudioSourceNode.connect(analyserNode);
+var highestVol = 0;
+
 const KEY = {
   LEFT: 37,
   RIGHT: 39,
@@ -46,6 +54,7 @@ export class Reacteroids extends Component {
       topScore: localStorage["topscore"] || 0,
       inGame: false,
       controllerNumber: -1,
+      micVolume: 0.0,
     };
 
     this.ship = [];
@@ -120,6 +129,24 @@ export class Reacteroids extends Component {
     const context = this.state.context;
     const keys = this.state.keys;
     const ship = this.ship[0];
+
+    // mess with microphone input, used by Bullet
+    const pcmData = new Float32Array(analyserNode.fftSize);
+    analyserNode.getFloatTimeDomainData(pcmData);
+    let sum = 0;
+
+    for (let i = 0; i < pcmData.length; i++) {
+    // get highest of input levels, Math.max(pcmData) didn't work
+    sum = (pcmData[i] > sum)? pcmData[i]: sum;
+    }
+
+    if (sum > highestVol) {
+      // report new high input value
+      highestVol = sum;
+      console.log("highest input:", sum);
+    }
+
+    this.state.micVolume = sum;
 
     context.save();
     context.scale(this.state.screen.ratio, this.state.screen.ratio);
