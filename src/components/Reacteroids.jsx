@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Ship from './Ship';
 import Asteroid from './Asteroid';
 import { randomNumBetweenExcluding } from '../utils/functions';
+import StartMenu from './StartMenu';
 
 const KEY = {
   LEFT:  37,
@@ -14,8 +15,8 @@ const KEY = {
 };
 
 export class Reacteroids extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
       screen: {
         width: window.innerWidth,
@@ -33,7 +34,8 @@ export class Reacteroids extends Component {
       asteroidCount: 3,
       currentScore: 0,
       topScore: localStorage['topscore'] || 0,
-      inGame: false
+      inGame: false,
+      isGameStarted: false
     }
     this.ship = [];
     this.asteroids = [];
@@ -69,7 +71,7 @@ export class Reacteroids extends Component {
 
     const context = this.refs.canvas.getContext('2d');
     this.setState({ context: context });
-    this.startGame();
+   // this.startGame();
     requestAnimationFrame(() => {this.update()});
   }
 
@@ -128,6 +130,7 @@ export class Reacteroids extends Component {
     this.setState({
       inGame: true,
       currentScore: 0,
+      isGameStarted: true
     });
 
     // Make ship
@@ -237,6 +240,7 @@ export class Reacteroids extends Component {
   render() {
     let endgame;
     let message;
+    let startMenu;
 
     if (this.state.currentScore <= 0) {
       message = '0 points... So sad.';
@@ -246,7 +250,19 @@ export class Reacteroids extends Component {
       message = this.state.currentScore + ' Points though :)'
     }
 
-    if(!this.state.inGame){
+
+    if(!this.state.isGameStarted){
+     startMenu = (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-16 z-1 text-center">
+          <p>Start Game</p>
+          <button className="border-4 border-white bg-transparent text-white text-m px-10 py-5 m-5 cursor-pointer hover:bg-white hover:text-black"
+            onClick={ this.startGame.bind(this) }>
+            Start Game 🚀🪨
+          </button>
+        </div>
+      )
+    }
+    else if(!this.state.inGame){
       endgame = (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-16 z-1 text-center">
           <p>Game over, man!</p>
@@ -261,6 +277,7 @@ export class Reacteroids extends Component {
 
     return (
       <div>
+        { startMenu}
         { endgame }
         <span className="block absolute top-15 z-1 text-sm left-20" >Score: {this.state.currentScore}</span>
         <span className="block absolute top-15 z-1 text-sm right-20" >Top Score: {this.state.topScore}</span>
