@@ -51,8 +51,8 @@ export default class Ship {
   }
 
   accelerate(val){
-    this.velocity.x -= Math.sin(-this.rotation*Math.PI/180) * this.speed;
-    this.velocity.y -= Math.cos(-this.rotation*Math.PI/180) * this.speed;
+    this.velocity.x -= Math.sin(-this.rotation*Math.PI/180) * this.speed * val;
+    this.velocity.y -= Math.cos(-this.rotation*Math.PI/180) * this.speed * val;
 
     // Thruster particles
     let posDelta = rotatePoint({x:0, y:-10}, {x:0,y:0}, (this.rotation-180) * Math.PI / 180);
@@ -81,6 +81,9 @@ export default class Ship {
     }
     if(state.keys.right){
       this.rotate('RIGHT');
+    }
+    if(state.keys.down){
+      this.accelerate(-0.25);
     }
     if(state.keys.space && Date.now() - this.lastShot > 300){
       const bullet = new Bullet({ship: this});
