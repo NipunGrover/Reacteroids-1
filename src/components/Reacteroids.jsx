@@ -72,6 +72,17 @@ export class Reacteroids extends Component {
     const context = this.refs.canvas.getContext('2d');
     this.setState({ context: context });
    // this.startGame();
+      // Make ship
+      let ship = new Ship({
+        position: {
+          x: this.state.screen.width/2,
+          y: this.state.screen.height/2
+        },
+        create: this.createObject.bind(this),
+        onDie: this.gameOver.bind(this)
+      });
+      this.createObject(ship, 'ship');
+
     requestAnimationFrame(() => {this.update()});
   }
 
