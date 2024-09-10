@@ -4,21 +4,14 @@ export default class Particle {
       this.velocity = args.velocity
       this.radius = args.size;
 
+      //color array for rainbow effect
       this.colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet'];
       this.currentColorIndex = 0;
-      //this.changeColor();
-      this.delete = false;
-      
+    
       this.lifeSpan = args.lifeSpan;
       this.inertia = 0.98;
     }
   
-    // changeColor() {
-    //   setInterval(() => {
-    //     this.currentColorIndex = (this.currentColorIndex + 1) % this.colors.length;
-    //     //console.log(`Color changed to: ${this.colors[this.currentColorIndex]}`);
-    //   }, 1000);
-    // }
 
     destroy(){
       this.delete = true;
@@ -53,7 +46,6 @@ export default class Particle {
       context.fill();
       context.restore();
       
-      //console.log(`Rendering particle with color: ${this.colors[this.currentColorIndex]}`);
       this.currentColorIndex = (this.currentColorIndex + 1) % this.colors.length;
     }
   }
