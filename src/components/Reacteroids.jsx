@@ -76,7 +76,7 @@ export class Reacteroids extends Component {
       let ship = new Ship({
         position: {
           x: this.state.screen.width/2,
-          y: this.state.screen.height/2
+          y: this.state.screen.height/3
         },
         create: this.createObject.bind(this),
         onDie: this.gameOver.bind(this)
@@ -115,8 +115,9 @@ export class Reacteroids extends Component {
 
     // Check for colisions
     this.checkCollisionsWith(this.bullets, this.asteroids);
+    if(this.state.inGame){
     this.checkCollisionsWithShip(this.ship, this.asteroids);
-
+    }
     // Remove or render
     this.updateObjects(this.particles, 'particles')
     this.updateObjects(this.asteroids, 'asteroids')
@@ -138,11 +139,20 @@ export class Reacteroids extends Component {
   }
 
   startGame(){
+    // destroying the start menu ship
+    if (this.ship.length > 0) {
+      this.ship[0].destroy();
+      this.ship = []; 
+    }
+
+
     this.setState({
       inGame: true,
       currentScore: 0,
       isGameStarted: true
     });
+
+    
 
     // Make ship
     let ship = new Ship({
@@ -155,9 +165,13 @@ export class Reacteroids extends Component {
     });
     this.createObject(ship, 'ship');
 
+ 
+
     // Make asteroids
     this.asteroids = [];
-    this.generateAsteroids(this.state.asteroidCount)
+    this.generateAsteroids(this.state.asteroidCount);
+
+  
   }
 
   gameOver(){
@@ -176,6 +190,7 @@ export class Reacteroids extends Component {
 
   generateAsteroids(howMany){
     let asteroids = [];
+    
     let ship = this.ship[0];
     for (let i = 0; i < howMany; i++) {
       let asteroid = new Asteroid({
@@ -265,10 +280,10 @@ export class Reacteroids extends Component {
     if(!this.state.isGameStarted){
      startMenu = (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-16 z-1 text-center">
-          <p>Start Game</p>
+          <p>Reacteroids (❁´◡`❁)</p>
           <button className="border-4 border-white bg-transparent text-white text-m px-10 py-5 m-5 cursor-pointer hover:bg-white hover:text-black"
             onClick={ this.startGame.bind(this) }>
-            Start Game 🚀🪨
+            PLAY 🚀🪨
           </button>
         </div>
       )
