@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Ship from './Ship';
 import Asteroid from './Asteroid';
 import { randomNumBetweenExcluding } from '../utils/functions';
+import zeroScoreSound from '../assets/zero-score-sound.mp3';
 
 const KEY = {
   LEFT:  37,
@@ -35,12 +36,17 @@ export class Reacteroids extends Component {
       asteroidCount: 3,
       currentScore: 0,
       topScore: localStorage['topscore'] || 0,
-      inGame: false
+      inGame: false,
+      isGameStarted: false,
+      zeroScoreSoundPlayed: false 
     }
     this.ship = [];
     this.asteroids = [];
     this.bullets = [];
     this.particles = [];
+
+    //sounds 
+    this.zeroScoreSound = new Audio(zeroScoreSound);
   }
 
   handleResize(value, e){
@@ -155,6 +161,8 @@ export class Reacteroids extends Component {
       inGame: false,
     });
 
+    this.setState({ zeroScoreSoundPlayed: true });
+
     // Replace top score
     if(this.state.currentScore > this.state.topScore){
       this.setState({
@@ -225,7 +233,10 @@ export class Reacteroids extends Component {
           item1.destroy();
         }
       }
+     
     }
+
+
   }
 
   checkCollision(obj1, obj2){
@@ -243,12 +254,18 @@ export class Reacteroids extends Component {
     let message;
 
     if (this.state.currentScore <= 0) {
-      message = '0 points... So sad.';
+      message = '0 points... You suck at this game man 😂';
     } else if (this.state.currentScore >= this.state.topScore){
       message = 'Top score with ' + this.state.currentScore + ' points. Woo!';
     } else {
       message = this.state.currentScore + ' Points though :)'
     }
+
+    if(this.state.currentScore <= 0 && this.state.zeroScoreSoundPlayed && !this.state.inGame){
+      this.zeroScoreSound.play();
+    }
+
+  
 
     if(!this.state.inGame){
       endgame = (
