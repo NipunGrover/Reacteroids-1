@@ -1,18 +1,18 @@
 import React, { Component } from 'react';
 
-class StartMenu extends Component {
+export class StartMenu extends Component {
   render() {
-    const { onStart } = this.props;
+    const { onStartGame } = this.props;
 
     return (
-        <div>
+        <div className="startDiv">
 
             <h1>Reacteroids</h1>
-            <button id="startButton" onClick={onStart}>Start Game 🚀🪨</button>
+            <button className="startButton" onClick={onStartGame}>Start Game 🚀🪨</button>
        
         </div>
       );
   }
 }
 
-export default StartMenu;
+

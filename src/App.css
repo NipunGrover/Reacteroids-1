@@ -24,3 +24,30 @@ html {
   }
 }
 
+
+.startDiv {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: 'black';
+  flex-direction: column;
+}
+
+.startDiv h1 {
+  color: white; 
+  margin-bottom: 20px; 
+  text-align: center;
+  font-size: 2.5rem;
+}
+
+
+.startDiv button {
+  padding: 10px 20px; /* Add padding to the button */
+  font-size: 2rem; /* Set font size */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  background-color: white; 
+  border: none; 
+  border-radius: 5px;
+  
+}

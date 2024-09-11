@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Ship from './Ship';
 import Asteroid from './Asteroid';
 import { randomNumBetweenExcluding } from '../utils/functions';
-import StartMenu from './StartMenu';
+
 
 const KEY = {
   LEFT:  37,
