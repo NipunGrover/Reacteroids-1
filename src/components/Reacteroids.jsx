@@ -7,9 +7,11 @@ const KEY = {
   LEFT:  37,
   RIGHT: 39,
   UP: 38,
+  DOWN: 40,
   A: 65,
   D: 68,
   W: 87,
+  S: 83,
   SPACE: 32
 };
 
@@ -56,6 +58,7 @@ export class Reacteroids extends Component {
     if(e.keyCode === KEY.LEFT   || e.keyCode === KEY.A) keys.left  = value;
     if(e.keyCode === KEY.RIGHT  || e.keyCode === KEY.D) keys.right = value;
     if(e.keyCode === KEY.UP     || e.keyCode === KEY.W) keys.up    = value;
+    if(e.keyCode === KEY.DOWN   || e.keyCode === KEY.S) keys.down    = value;
     if(e.keyCode === KEY.SPACE) keys.space = value;
     this.setState({
       keys : keys
@@ -114,6 +117,7 @@ export class Reacteroids extends Component {
 
     // Next frame
     requestAnimationFrame(() => {this.update()});
+
   }
 
   addScore(points){
