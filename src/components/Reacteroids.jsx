@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Ship from './Ship';
 import Asteroid from './Asteroid';
 import { randomNumBetweenExcluding } from '../utils/functions';
+import  {MouseAim} from './MouseAim';
 
 const KEY = {
   LEFT:  37,
@@ -16,8 +17,8 @@ const KEY = {
 };
 
 export class Reacteroids extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
       screen: {
         width: window.innerWidth,
@@ -42,7 +43,7 @@ export class Reacteroids extends Component {
     this.bullets = [];
     this.particles = [];
   }
-
+  
   handleResize(value, e){
     this.setState({
       screen : {
@@ -69,6 +70,7 @@ export class Reacteroids extends Component {
     window.addEventListener('keyup',   this.handleKeys.bind(this, false));
     window.addEventListener('keydown', this.handleKeys.bind(this, true));
     window.addEventListener('resize',  this.handleResize.bind(this, false));
+    window.addEventListener('mousemove', this.handleMouseMove);
 
     const context = this.refs.canvas.getContext('2d');
     this.setState({ context: context });
@@ -80,6 +82,7 @@ export class Reacteroids extends Component {
     window.removeEventListener('keyup', this.handleKeys);
     window.removeEventListener('keydown', this.handleKeys);
     window.removeEventListener('resize', this.handleResize);
+    window.removeEventListener('mousemove', this.handleMouseMove);
   }
 
   update() {
@@ -114,6 +117,12 @@ export class Reacteroids extends Component {
     this.updateObjects(this.ship, 'ship')
 
     context.restore();
+
+    if (ship && this.props.mousePosition) {
+      const dx = this.props.mousePosition.x - ship.position.x;
+      const dy = this.props.mousePosition.y - ship.position.y;
+      ship.rotation = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+    }
 
     // Next frame
     requestAnimationFrame(() => {this.update()});

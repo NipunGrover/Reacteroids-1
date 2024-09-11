@@ -71,6 +71,8 @@ export default class Ship {
     this.create(particle, 'particles');
   }
 
+  
+
   render(state){
     // Controls
     if(state.keys.up){
