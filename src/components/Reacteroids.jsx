@@ -71,18 +71,8 @@ export class Reacteroids extends Component {
 
     const context = this.refs.canvas.getContext('2d');
     this.setState({ context: context });
-   // this.startGame();
-      // Make ship
-      let ship = new Ship({
-        position: {
-          x: this.state.screen.width/2,
-          y: this.state.screen.height/3
-        },
-        create: this.createObject.bind(this),
-        onDie: this.gameOver.bind(this)
-      });
-      this.createObject(ship, 'ship');
-
+    this.startGame();
+   
     requestAnimationFrame(() => {this.update()});
   }
 
@@ -139,13 +129,7 @@ export class Reacteroids extends Component {
   }
 
   startGame(){
-    // destroying the start menu ship
-    if (this.ship.length > 0) {
-      this.ship[0].destroy();
-      this.ship = []; 
-    }
-
-
+    
     this.setState({
       inGame: true,
       currentScore: 0,
