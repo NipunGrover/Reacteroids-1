@@ -4,6 +4,7 @@ import Asteroid from './Asteroid';
 import { randomNumBetweenExcluding } from '../utils/functions';
 import zeroScoreSound from '../assets/zero-score-sound.mp3';
 
+
 const KEY = {
   LEFT:  37,
   RIGHT: 39,
@@ -17,8 +18,8 @@ const KEY = {
 };
 
 export class Reacteroids extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
       screen: {
         width: window.innerWidth,
@@ -58,7 +59,7 @@ export class Reacteroids extends Component {
       }
     });
   }
-
+  
   handleKeys(value, e){
     let keys = this.state.keys;
     if(e.keyCode === KEY.LEFT   || e.keyCode === KEY.A) keys.left  = value;
@@ -79,6 +80,7 @@ export class Reacteroids extends Component {
     const context = this.refs.canvas.getContext('2d');
     this.setState({ context: context });
     this.startGame();
+   
     requestAnimationFrame(() => {this.update()});
   }
 
@@ -111,8 +113,9 @@ export class Reacteroids extends Component {
 
     // Check for colisions
     this.checkCollisionsWith(this.bullets, this.asteroids);
+    if(this.state.inGame){
     this.checkCollisionsWithShip(this.ship, this.asteroids);
-
+    }
     // Remove or render
     this.updateObjects(this.particles, 'particles')
     this.updateObjects(this.asteroids, 'asteroids')
@@ -135,10 +138,14 @@ export class Reacteroids extends Component {
   }
 
   startGame(){
+    
     this.setState({
       inGame: true,
       currentScore: 0,
+      isGameStarted: true
     });
+
+    
 
     // Make ship
     let ship = new Ship({
@@ -151,9 +158,13 @@ export class Reacteroids extends Component {
     });
     this.createObject(ship, 'ship');
 
+ 
+
     // Make asteroids
     this.asteroids = [];
-    this.generateAsteroids(this.state.asteroidCount)
+    this.generateAsteroids(this.state.asteroidCount);
+
+  
   }
 
   gameOver(){
@@ -174,6 +185,7 @@ export class Reacteroids extends Component {
 
   generateAsteroids(howMany){
     let asteroids = [];
+    
     let ship = this.ship[0];
     for (let i = 0; i < howMany; i++) {
       let asteroid = new Asteroid({
@@ -252,6 +264,7 @@ export class Reacteroids extends Component {
   render() {
     let endgame;
     let message;
+    let startMenu;
 
     if (this.state.currentScore <= 0) {
       message = '0 points... You suck at this game man 😂';
@@ -282,6 +295,7 @@ export class Reacteroids extends Component {
 
     return (
       <div>
+        { startMenu}
         { endgame }
         <span className="block absolute top-15 z-1 text-sm left-20" >Score: {this.state.currentScore}</span>
         <span className="block absolute top-15 z-1 text-sm right-20" >Top Score: {this.state.topScore}</span>
