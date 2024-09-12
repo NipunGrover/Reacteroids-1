@@ -27,11 +27,11 @@ html {
 
 .startDiv {
   display: flex;
-  justify-content: center;
   align-items: center;
   height: 100vh;
   background-color: 'black';
   flex-direction: column;
+  justify-content: space-between;
 }
 
 .startDiv h1 {
@@ -42,12 +42,56 @@ html {
 }
 
 
-.startDiv button {
+.startButton {
   padding: 10px 20px; /* Add padding to the button */
   font-size: 2rem; /* Set font size */
   cursor: pointer; /* Change cursor to pointer on hover */
   background-color: white; 
   border: none; 
   border-radius: 5px;
+  align-self: center;
   
+}
+
+.soundButton{
+  filter: invert(0.95);
+  width:5rem; 
+  height: 5rem;
+  margin-top: 30px;
+}
+
+.instructions {
+  color: white; 
+  margin-top: 20px; 
+  text-align: center ;
+  font-size: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  justify-content: center;
+}
+
+.instructions h2 {
+  color: white; 
+  margin-top: 20px; 
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.bottomContent{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+}
+
+.middleContainer {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 6%;
 }
