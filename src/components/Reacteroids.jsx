@@ -36,12 +36,26 @@ export class Reacteroids extends Component {
       asteroidCount: 3,
       currentScore: 0,
       topScore: localStorage['topscore'] || 0,
-      inGame: false
+      inGame: false,
+      mousePosition: {
+        x: 0,
+        y: 0
+      }
+
     }
     this.ship = [];
     this.asteroids = [];
     this.bullets = [];
     this.particles = [];
+  }
+
+  handleMouseMovement(e) {  
+    this.setState({
+      mousePosition: {
+        x: e.clientX,
+        y: e.clientY
+      }
+    });
   }
   
   handleResize(value, e){
@@ -70,7 +84,7 @@ export class Reacteroids extends Component {
     window.addEventListener('keyup',   this.handleKeys.bind(this, false));
     window.addEventListener('keydown', this.handleKeys.bind(this, true));
     window.addEventListener('resize',  this.handleResize.bind(this, false));
-    window.addEventListener('mousemove', this.handleMouseMove);
+    window.addEventListener('mousemove', this.handleMouseMovement.bind(this));
 
     const context = this.refs.canvas.getContext('2d');
     this.setState({ context: context });
@@ -82,7 +96,7 @@ export class Reacteroids extends Component {
     window.removeEventListener('keyup', this.handleKeys);
     window.removeEventListener('keydown', this.handleKeys);
     window.removeEventListener('resize', this.handleResize);
-    window.removeEventListener('mousemove', this.handleMouseMove);
+    window.removeEventListener('mousemove', this.handleMouseMovement.bind(this));
   }
 
   update() {

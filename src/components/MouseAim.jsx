@@ -13,8 +13,8 @@ export class MouseAim extends Component {
       const {left, top} = this.gameArea.getBoundingClientRect();  
       this.setState({
         mousePosition: {
-          x: e.pageX,
-          y: e.pageY
+          x: e.clientX,
+          y: e.clientY
         }
       });
     }
