@@ -3,6 +3,9 @@ import Ship from './Ship';
 import Asteroid from './Asteroid';
 import { randomNumBetweenExcluding } from '../utils/functions';
 import zeroScoreSound from '../assets/zero-score-sound.mp3';
+import shootShound from '../assets/shoot-sound.wav';
+import thrustSound from '../assets/thrust-sound.wav';
+import shipCollisionSound from '../assets/ship-collision-sound.wav';
 
 
 const KEY = {
@@ -48,6 +51,11 @@ export class Reacteroids extends Component {
 
     //sounds 
     this.zeroScoreSound = new Audio(zeroScoreSound);
+    this.shootShound = new Audio(shootShound);
+    this.thrustSound = new Audio(thrustSound); // Add thrust sound
+    this.thrustSound.loop = true; 
+    this.shipCollisionSound = new Audio(shipCollisionSound);
+  
   }
 
   handleResize(value, e){
@@ -65,6 +73,14 @@ export class Reacteroids extends Component {
     if(e.keyCode === KEY.LEFT   || e.keyCode === KEY.A) keys.left  = value;
     if(e.keyCode === KEY.RIGHT  || e.keyCode === KEY.D) keys.right = value;
     if(e.keyCode === KEY.UP     || e.keyCode === KEY.W) keys.up    = value;
+    {
+      if (value) {
+        this.thrustSound.play(); 
+      } else {
+        this.thrustSound.pause(); 
+        this.thrustSound.currentTime = 0; 
+      }
+    }
     if(e.keyCode === KEY.DOWN   || e.keyCode === KEY.S) keys.down    = value;
     if(e.keyCode === KEY.SPACE) keys.space = value;
     this.setState({
@@ -172,8 +188,14 @@ export class Reacteroids extends Component {
       inGame: false,
     });
 
+    if (this.state.currentScore > 0)
+    {
+    this.shipCollisionSound.play();
+    }
+  
     this.setState({ zeroScoreSoundPlayed: true });
-
+    this.thrustSound.pause();  
+    
     // Replace top score
     if(this.state.currentScore > this.state.topScore){
       this.setState({

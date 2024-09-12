@@ -1,4 +1,5 @@
 import { rotatePoint } from '../utils/functions';
+import shootSound from '../assets/shoot-sound.wav';
 
 export default class Bullet {
   constructor(args) {
@@ -13,6 +14,8 @@ export default class Bullet {
       y:posDelta.y / 2
     };
     this.radius = 2;
+
+    this.shootSound = new Audio(shootSound);
   }
 
   destroy(){
@@ -44,5 +47,7 @@ export default class Bullet {
     context.closePath();
     context.fill();
     context.restore();
+    this.shootSound.play();
+
   }
 }

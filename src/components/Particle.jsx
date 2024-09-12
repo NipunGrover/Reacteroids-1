@@ -2,7 +2,7 @@ export default class Particle {
     constructor(args) {
       this.position = args.position
       this.velocity = args.velocity
-      this.radius = args.size;
+      this.radius = args.size + 0.5;
 
       //color array for rainbow effect
       this.colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet'];

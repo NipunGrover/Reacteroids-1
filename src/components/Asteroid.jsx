@@ -1,5 +1,6 @@
 import Particle from './Particle';
 import { asteroidVertices, randomNumBetween } from '../utils/functions';
+import asteroidExplodeSound from '../assets/asteroid-breaking.wav';
 
 export default class Asteroid {
   constructor(args) {
@@ -15,6 +16,9 @@ export default class Asteroid {
     this.create = args.create;
     this.addScore = args.addScore;
     this.vertices = asteroidVertices(8, args.size)
+
+
+    this.asteroidExplodeSound = new Audio(asteroidExplodeSound);
   }
 
   destroy(){
@@ -38,6 +42,7 @@ export default class Asteroid {
       this.create(particle, 'particles');
     }
 
+    this.asteroidExplodeSound.play();
     // Break into smaller asteroids
     if(this.radius > 10){
       for (let i = 0; i < 2; i++) {

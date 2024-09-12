@@ -1,6 +1,7 @@
 import Bullet from './Bullet';
 import Particle from './Particle';
 import { rotatePoint, randomNumBetween } from '../utils/functions';
+import thrustSound from '../assets/thrust-sound.wav';
 
 export default class Ship {
   constructor(args) {
@@ -17,6 +18,8 @@ export default class Ship {
     this.lastShot = 0;
     this.create = args.create;
     this.onDie = args.onDie;
+
+    this.thrustSound = new Audio(thrustSound);
   }
 
   destroy(){
@@ -38,6 +41,7 @@ export default class Ship {
         }
       });
       this.create(particle, 'particles');
+      
     }
   }
 
@@ -58,7 +62,7 @@ export default class Ship {
     let posDelta = rotatePoint({x:0, y:-10}, {x:0,y:0}, (this.rotation-180) * Math.PI / 180);
     const particle = new Particle({
       lifeSpan: randomNumBetween(20, 40),
-      size: randomNumBetween(1, 3),
+      size: randomNumBetween(1, 4),
       position: {
         x: this.position.x + posDelta.x + randomNumBetween(-2, 2),
         y: this.position.y + posDelta.y + randomNumBetween(-2, 2)
